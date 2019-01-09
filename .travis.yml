@@ -1,11 +1,14 @@
 # The current Travis default is a container based 14.04 Trust on EC2
 # Additional builds with specific requirements for a full VM need to
 # be added as additional matrix: entries later on
-dist: xenial
+sudo: false
+dist: trusty
 language: c
 compiler:
   - gcc
 cache: ccache
+
+
 addons:
   apt:
     packages:
@@ -37,6 +40,7 @@ addons:
       - uuid-dev
       - gcovr
 
+
 # The channel name "irc.oftc.net#qemu" is encrypted against qemu/qemu
 # to prevent IRC notifications from forks. This was created using:
 # $ travis encrypt -r "qemu/qemu" "irc.oftc.net#qemu"
@@ -46,6 +50,8 @@ notifications:
       - secure: "F7GDRgjuOo5IUyRLqSkmDL7kvdU4UcH3Lm/W2db2JnDHTGCqgEdaYEYKciyCLZ57vOTsTsOgesN8iUT7hNHBd1KWKjZe9KDTZWppWRYVwAwQMzVeSOsbbU4tRoJ6Pp+3qhH1Z0eGYR9ZgKYAoTumDFgSAYRp4IscKS8jkoedOqM="
     on_success: change
     on_failure: always
+
+
 env:
   global:
     - SRC_DIR="."
@@ -55,9 +61,13 @@ env:
   matrix:
     # test only one build variant with plugins activated
     - CONFIG="--enable-capstone --enable-tcg-plugin --target-list=x86_64-linux-user,arm-linux-user,aarch64-linux-user,x86_64-softmmu,arm-softmmu,aarch64-softmmu"
+
+
 git:
   # we want to do this ourselves
   submodules: false
+
+
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update ; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install libffi gettext glib pixman ; fi
