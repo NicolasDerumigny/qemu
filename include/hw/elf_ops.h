@@ -270,6 +270,7 @@ fail:
 }
 
 static int glue(load_elf, SZ)(const char *name, int fd,
+                              uint64_t (*elf_note_fn)(void *, void *, bool),
                               uint64_t (*translate_fn)(void *, uint64_t),
                               void *translate_opaque,
                               int must_swab, uint64_t *pentry,
@@ -502,6 +503,7 @@ static int glue(load_elf, SZ)(const char *name, int fd,
             data = NULL;
         }
     }
+
     g_free(phdr);
     if (lowaddr)
         *lowaddr = (uint64_t)(elf_sword)low;
