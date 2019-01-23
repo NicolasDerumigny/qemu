@@ -490,7 +490,6 @@ libxml2=""
 docker="no"
 debug_mutex="no"
 libpmem=""
-libudev="no"
 
 # cross compilers defaults, can be overridden with --cross-cc-ARCH
 cross_cc_aarch64="aarch64-linux-gnu-gcc"
@@ -998,6 +997,10 @@ for opt do
   --enable-trace-backend=*) trace_backends="$optarg"
   ;;
   --with-trace-file=*) trace_file="$optarg"
+  ;;
+  --with-default-devices) default_devices="yes"
+  ;;
+  --without-default-devices) default_devices="no"
   ;;
   --enable-gprof) gprof="yes"
   ;;
@@ -6421,6 +6424,11 @@ if test "$tcg_plugin_cpp" = "yes" ; then
   echo "CONFIG_TCG_PLUGIN_CPP=y" >> $config_host_mak
 fi
 
+if test "$default_devices" = "yes" ; then
+  echo "CONFIG_MINIKCONF_MODE=--defconfig" >> $config_host_mak
+else
+  echo "CONFIG_MINIKCONF_MODE=--allnoconfig" >> $config_host_mak
+fi
 
 if test "$debug_tcg" = "yes" ; then
   echo "CONFIG_DEBUG_TCG=y" >> $config_host_mak
