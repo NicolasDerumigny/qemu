@@ -95,8 +95,8 @@ $(QEMU_PROG)-log.stp: $(BUILD_DIR)/trace-events-all $(tracetool-y)
 else
 stap:
 endif
-.PHONY: stap
 
+.PHONY: stap
 all: $(PROGS) stap
 
 # Dummy command so that make thinks it has done something
@@ -143,6 +143,7 @@ obj-y += bsd-user/
 obj-y += gdbstub.o
 
 endif #CONFIG_BSD_USER
+
 #########################################################
 # System emulator target
 ifdef CONFIG_SOFTMMU
@@ -167,77 +168,6 @@ endif
 GENERATED_FILES += hmp-commands.h hmp-commands-info.h
 
 endif # CONFIG_SOFTMMU
-
-dummy := $(call unnest-vars,,obj-y)
-#########################################################
-# TCG plugin targets
-
-ifdef CONFIG_TCG_PLUGIN
-
-ifdef CONFIG_USER_ONLY
-EMULATION_MODE=user
-else
-EMULATION_MODE=system
-endif
-
-TCG_PLUGINS := $(patsubst $(SRC_PATH)/tcg/plugins/%.c,tcg-plugin-%.so,$(wildcard $(SRC_PATH)/tcg/plugins/*.c))
-all: $(TCG_PLUGINS)
-
-.SECONDARY: $(TCG_PLUGINS:.so=.o)
-
-tcg/tcg-plugin.o: QEMU_CFLAGS += -DEMULATION_MODE=\"$(EMULATION_MODE)\"
-
-$(TCG_PLUGINS:.so=.o): QEMU_CFLAGS += -fno-PIE -fPIC -DEMULATION_MODE=\"$(EMULATION_MODE)\"
-$(TCG_PLUGINS:.so=.o): $(SRC_PATH)/tcg/tcg-plugin.h
-tcg-plugin-%.o: $(SRC_PATH)/tcg/plugins/%.c
-	$(call COMPILE_CC)
-
-$(TCG_PLUGINS): LDFLAGS += -shared
-tcg-plugin-%.so: tcg-plugin-%.o
-	$(call LINK,$^)
-
-d4-7/config.h: $(SRC_PATH)/tcg/plugins/d4-7/configure
-	mkdir -p d4-7
-	cd d4-7 && env CFLAGS="-O2 -DD4ADDR=uint64_t -include stdint.h -fPIC -I$${PWD}" $^
-
-D4_OBJS=d4-7/ref.o d4-7/misc.o d4-7/cmdmain.o d4-7/cmdargs.o d4-7/tracein.o d4-7/xdinfmt.o d4-7/dinfmt.o d4-7/binaryfmt.o d4-7/pixie32fmt.o d4-7/pixie64fmt.o
-$(D4_OBJS): d4-7/config.h
-$(D4_OBJS): d4-7/%.o:
-	cd d4-7 && env MAKEFLAGS= $(MAKE) $*.o
-
-tcg-plugin-dineroIV.o: CFLAGS += -Id4-7/
-tcg-plugin-dineroIV.o: d4-7/config.h
-
-tcg-plugin-dineroIV.so: tcg-plugin-dineroIV.o $(D4_OBJS)
-	$(call LINK,$^)
-
-tcg-plugin-dyncount.o: CFLAGS += $(CAP_CFLAGS)
-tcg-plugin-dyncount.so: LIBS += $(CAP_LDFLAGS)
-
-tcg-plugin-dyntrace.o: CFLAGS += $(CAP_CFLAGS)
-tcg-plugin-dyntrace.so: LIBS += $(CAP_LDFLAGS)
-
-tcg-plugin-coverage.o: CFLAGS += $(CAP_CFLAGS)
-tcg-plugin-coverage.so: LIBS += $(CAP_LDFLAGS)
-
-# cxx plugin
-ifdef CONFIG_TCG_PLUGIN_CPP
-
-tcg-plugin-cpp.so: LIBS += $(CAP_LDFLAGS) $(LDFLAGS) -ldwarf++ -lelf++
-
-CXX_PLUGIN_FLAGS := -Wall -std=c++14 \
-					$(QEMU_CXXFLAGS) $(CAP_CFLAGS) $(CFLAGS) -fno-PIE -fPIC
-
-CPP_PLUGIN_OBJS := $(patsubst $(SRC_PATH)/tcg/plugins/cpp/%.cpp,cpp-%.o,$(wildcard $(SRC_PATH)/tcg/plugins/cpp/*.cpp))
-CPP_DEPS := $(patsubst %.o,%.d,$(CPP_PLUGIN_OBJS))
-cpp-%.o: $(SRC_PATH)/tcg/plugins/cpp/%.cpp
-	$(CXX) -c $(CXX_PLUGIN_FLAGS) -MD $< -o $@
--include $(CPP_DEPS)
-
-tcg-plugin-cpp.so: tcg-plugin-cpp.o $(CPP_PLUGIN_OBJS)
-endif # CONFIG_TCG_PLUGIN_CPP
-
-endif # CONFIG_TCG_PLUGIN
 
 dummy := $(call unnest-vars,,obj-y)
 all-obj-y := $(obj-y)
@@ -267,8 +197,10 @@ all-obj-y += $(qom-obj-y)
 all-obj-$(CONFIG_SOFTMMU) += $(authz-obj-y)
 all-obj-$(CONFIG_SOFTMMU) += $(block-obj-y) $(chardev-obj-y)
 all-obj-$(CONFIG_USER_ONLY) += $(crypto-aes-obj-y)
+
 all-obj-$(CONFIG_SOFTMMU) += $(crypto-obj-y)
 all-obj-$(CONFIG_SOFTMMU) += $(io-obj-y)
+all-obj-$(CONFIG_SOFTMMU) += $(slirp-obj-y)
 
 $(QEMU_PROG_BUILD): config-devices.mak
 
