@@ -40,8 +40,6 @@ addons:
       - gcovr
   homebrew:
     packages:
-      - libffi
-      - gettext
       - glib
       - pixman
 
@@ -57,11 +55,13 @@ notifications:
     on_failure: always
 
 
+
 env:
   global:
     - SRC_DIR="."
     - BUILD_DIR="."
     - TEST_CMD="make check -j3 V=1"
+
 
 git:
   # we want to do this ourselves
