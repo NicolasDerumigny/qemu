@@ -746,6 +746,9 @@ void runstate_set(RunState new_state)
 {
     assert(new_state < RUN_STATE__MAX);
 
+    trace_runstate_set(current_run_state, RunState_str(current_run_state),
+                       new_state, RunState_str(current_run_state));
+
     if (current_run_state == new_state) {
         return;
     }
@@ -756,7 +759,7 @@ void runstate_set(RunState new_state)
                      RunState_str(new_state));
         abort();
     }
-    trace_runstate_set(new_state);
+
     current_run_state = new_state;
 }
 
@@ -1569,7 +1572,7 @@ void vm_state_notify(int running, RunState state)
 {
     VMChangeStateEntry *e, *next;
 
-    trace_vm_state_notify(running, state);
+    trace_vm_state_notify(running, state, RunState_str(state));
 
     QLIST_FOREACH_SAFE(e, &vm_change_state_head, entries, next) {
         e->cb(e->opaque, running, state);
