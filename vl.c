@@ -121,9 +121,6 @@ extern void tcg_plugin_set_filename(const char *filename);
 
 #include "disas/disas.h"
 
-
-#include "slirp/libslirp.h"
-
 #include "trace-root.h"
 #include "trace/control.h"
 #include "qemu/queue.h"
