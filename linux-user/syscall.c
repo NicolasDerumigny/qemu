@@ -2850,7 +2850,7 @@ static abi_long do_sendrecvmmsg(int fd, abi_ulong target_msgvec,
 static abi_long do_accept4(int fd, abi_ulong target_addr,
                            abi_ulong target_addrlen_addr, int flags)
 {
-    socklen_t addrlen;
+    socklen_t addrlen, ret_addrlen;
     void *addr;
     abi_long ret;
     int host_flags;
@@ -2874,11 +2874,13 @@ static abi_long do_accept4(int fd, abi_ulong target_addr,
 
     addr = alloca(addrlen);
 
-    ret = get_errno(safe_accept4(fd, addr, &addrlen, host_flags));
+    ret_addrlen = addrlen;
+    ret = get_errno(safe_accept4(fd, addr, &ret_addrlen, host_flags));
     if (!is_error(ret)) {
-        host_to_target_sockaddr(target_addr, addr, addrlen);
-        if (put_user_u32(addrlen, target_addrlen_addr))
+        host_to_target_sockaddr(target_addr, addr, MIN(addrlen, ret_addrlen));
+        if (put_user_u32(ret_addrlen, target_addrlen_addr)) {
             ret = -TARGET_EFAULT;
+        }
     }
     return ret;
 }
@@ -2887,7 +2889,7 @@ static abi_long do_accept4(int fd, abi_ulong target_addr,
 static abi_long do_getpeername(int fd, abi_ulong target_addr,
                                abi_ulong target_addrlen_addr)
 {
-    socklen_t addrlen;
+    socklen_t addrlen, ret_addrlen;
     void *addr;
     abi_long ret;
 
@@ -2903,11 +2905,13 @@ static abi_long do_getpeername(int fd, abi_ulong target_addr,
 
     addr = alloca(addrlen);
 
-    ret = get_errno(getpeername(fd, addr, &addrlen));
+    ret_addrlen = addrlen;
+    ret = get_errno(getpeername(fd, addr, &ret_addrlen));
     if (!is_error(ret)) {
-        host_to_target_sockaddr(target_addr, addr, addrlen);
-        if (put_user_u32(addrlen, target_addrlen_addr))
+        host_to_target_sockaddr(target_addr, addr, MIN(addrlen, ret_addrlen));
+        if (put_user_u32(ret_addrlen, target_addrlen_addr)) {
             ret = -TARGET_EFAULT;
+        }
     }
     return ret;
 }
@@ -2916,7 +2920,7 @@ static abi_long do_getpeername(int fd, abi_ulong target_addr,
 static abi_long do_getsockname(int fd, abi_ulong target_addr,
                                abi_ulong target_addrlen_addr)
 {
-    socklen_t addrlen;
+    socklen_t addrlen, ret_addrlen;
     void *addr;
     abi_long ret;
 
@@ -2932,11 +2936,13 @@ static abi_long do_getsockname(int fd, abi_ulong target_addr,
 
     addr = alloca(addrlen);
 
-    ret = get_errno(getsockname(fd, addr, &addrlen));
+    ret_addrlen = addrlen;
+    ret = get_errno(getsockname(fd, addr, &ret_addrlen));
     if (!is_error(ret)) {
-        host_to_target_sockaddr(target_addr, addr, addrlen);
-        if (put_user_u32(addrlen, target_addrlen_addr))
+        host_to_target_sockaddr(target_addr, addr, MIN(addrlen, ret_addrlen));
+        if (put_user_u32(ret_addrlen, target_addrlen_addr)) {
             ret = -TARGET_EFAULT;
+        }
     }
     return ret;
 }
@@ -3008,7 +3014,7 @@ static abi_long do_recvfrom(int fd, abi_ulong msg, size_t len, int flags,
                             abi_ulong target_addr,
                             abi_ulong target_addrlen)
 {
-    socklen_t addrlen;
+    socklen_t addrlen, ret_addrlen;
     void *addr;
     void *host_msg;
     abi_long ret;
@@ -3026,10 +3032,12 @@ static abi_long do_recvfrom(int fd, abi_ulong msg, size_t len, int flags,
             goto fail;
         }
         addr = alloca(addrlen);
+        ret_addrlen = addrlen;
         ret = get_errno(safe_recvfrom(fd, host_msg, len, flags,
-                                      addr, &addrlen));
+                                      addr, &ret_addrlen));
     } else {
         addr = NULL; /* To keep compiler quiet.  */
+        addrlen = 0; /* To keep compiler quiet.  */
         ret = get_errno(safe_recvfrom(fd, host_msg, len, flags, NULL, 0));
     }
     if (!is_error(ret)) {
@@ -3042,8 +3050,9 @@ static abi_long do_recvfrom(int fd, abi_ulong msg, size_t len, int flags,
             }
         }
         if (target_addr) {
-            host_to_target_sockaddr(target_addr, addr, addrlen);
-            if (put_user_u32(addrlen, target_addrlen)) {
+            host_to_target_sockaddr(target_addr, addr,
+                                    MIN(addrlen, ret_addrlen));
+            if (put_user_u32(ret_addrlen, target_addrlen)) {
                 ret = -TARGET_EFAULT;
                 goto fail;
             }
