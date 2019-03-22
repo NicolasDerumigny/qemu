@@ -1771,7 +1771,7 @@ TranslationBlock *tb_gen_code(CPUState *cpu,
 
     tcg_func_start(tcg_ctx);
 
-    tcg_ctx->cpu = ENV_GET_CPU(env);
+    tcg_ctx->cpu = env_cpu(env);
     tcg_plugin_before_gen_tb(tb);
 
     gen_intermediate_code(cpu, tb);
