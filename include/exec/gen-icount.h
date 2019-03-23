@@ -5,6 +5,8 @@
 
 /* Helpers for instruction counting code generation.  */
 
+#define ENV_OFFSET   offsetof(ArchCPU, env)
+
 static TCGOp *count_ifetch_insn;
 static TCGOp *icount_start_insn;
 
