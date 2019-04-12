@@ -2033,6 +2033,7 @@ typedef struct VGAInterfaceInfo {
 static const VGAInterfaceInfo vga_interfaces[VGA_TYPE_MAX] = {
     [VGA_NONE] = {
         .opt_name = "none",
+        .name = "no graphic card",
     },
     [VGA_STD] = {
         .opt_name = "std",
@@ -2071,6 +2072,7 @@ static const VGAInterfaceInfo vga_interfaces[VGA_TYPE_MAX] = {
     },
     [VGA_XENFB] = {
         .opt_name = "xenfb",
+        .name = "Xen paravirtualized framebuffer",
     },
 };
 
