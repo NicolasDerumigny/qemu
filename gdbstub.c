@@ -34,6 +34,7 @@
 #include "sysemu/sysemu.h"
 #include "exec/gdbstub.h"
 #include "hw/cpu/cluster.h"
+#include "hw/boards.h"
 #endif
 
 #include "tcg-plugin.h"

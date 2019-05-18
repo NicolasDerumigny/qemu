@@ -45,6 +45,10 @@
 #include "exec/cpu-common.h"
 #include "exec/exec-all.h"
 
+#if !defined(CONFIG_USER_ONLY)
+#include "hw/boards.h"
+#endif
+
 #include "tcg-op.h"
 #include "tcg-plugin.h"
 
