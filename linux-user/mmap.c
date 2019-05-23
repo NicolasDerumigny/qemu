@@ -19,7 +19,6 @@
 #include "qemu/osdep.h"
 
 #include "qemu.h"
-#include "qemu-common.h"
 #include "tcg-plugin.h"
 
 //#define DEBUG_MMAP

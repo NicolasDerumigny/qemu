@@ -26,7 +26,6 @@
 #define TCG_H
 
 #include "qemu/osdep.h" /* CONFIG_USER_ONLY */
-#include "qemu-common.h"
 #include "cpu.h"
 #include "exec/tb-context.h"
 #include "qemu/bitops.h"
