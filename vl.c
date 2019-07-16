@@ -2906,6 +2906,8 @@ int main(int argc, char **argv, char **envp)
     char *dir, **dirs;
     BlockdevOptionsQueue bdo_queue = QSIMPLEQ_HEAD_INITIALIZER(bdo_queue);
 
+    os_set_line_buffering();
+
     error_init(argv[0]);
     module_call_init(MODULE_INIT_TRACE);
 
@@ -4282,8 +4284,6 @@ int main(int argc, char **argv, char **envp)
     if (semihosting_enabled() && semihosting_get_arg(0) != NULL) {
         tcg_plugin_set_filename(semihosting_get_arg(0));
     }
-
-    os_set_line_buffering();
 
     /* spice needs the timers to be initialized by this point */
     qemu_spice_init();
