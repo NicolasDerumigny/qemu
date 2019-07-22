@@ -1583,8 +1583,6 @@ static void qemu_system_wakeup(void)
 
     if (mc && mc->wakeup) {
         mc->wakeup(current_machine);
-    } else {
-        qemu_system_reset(SHUTDOWN_CAUSE_NONE);
     }
 }
 
