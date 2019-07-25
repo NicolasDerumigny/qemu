@@ -8,6 +8,24 @@
 static TCGOp *count_ifetch_insn;
 static TCGOp *icount_start_insn;
 
+static inline void gen_io_start(void)
+{
+    TCGv_i32 tmp = tcg_const_i32(1);
+    tcg_gen_st_i32(tmp, cpu_env,
+                   offsetof(ArchCPU, parent_obj.can_do_io) -
+                   offsetof(ArchCPU, env));
+    tcg_temp_free_i32(tmp);
+}
+
+static inline void gen_io_end(void)
+{
+    TCGv_i32 tmp = tcg_const_i32(0);
+    tcg_gen_st_i32(tmp, cpu_env,
+                   offsetof(ArchCPU, parent_obj.can_do_io) -
+                   offsetof(ArchCPU, env));
+    tcg_temp_free_i32(tmp);
+}
+
 static inline void gen_count_ifetch_start(void)
 {
     TCGv_i64 count, ninst64;
@@ -68,6 +86,8 @@ static inline void gen_tb_start(TranslationBlock *tb)
         tcg_gen_st16_i32(count, cpu_env,
                          offsetof(ArchCPU, neg.icount_decr.u16.low) -
                          offsetof(ArchCPU, env));
+        /* Disable I/O by default */
+        gen_io_end();
     }
 
     tcg_temp_free_i32(count);
@@ -89,24 +109,6 @@ static inline void gen_tb_end(TranslationBlock *tb, int num_insns)
 
     gen_set_label(tcg_ctx->exitreq_label);
     tcg_gen_exit_tb(tb, TB_EXIT_REQUESTED);
-}
-
-static inline void gen_io_start(void)
-{
-    TCGv_i32 tmp = tcg_const_i32(1);
-    tcg_gen_st_i32(tmp, cpu_env,
-                   offsetof(ArchCPU, parent_obj.can_do_io) -
-                   offsetof(ArchCPU, env));
-    tcg_temp_free_i32(tmp);
-}
-
-static inline void gen_io_end(void)
-{
-    TCGv_i32 tmp = tcg_const_i32(0);
-    tcg_gen_st_i32(tmp, cpu_env,
-                   offsetof(ArchCPU, parent_obj.can_do_io) -
-                   offsetof(ArchCPU, env));
-    tcg_temp_free_i32(tmp);
 }
 
 #endif
