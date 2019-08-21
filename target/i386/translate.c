@@ -6017,6 +6017,12 @@ DEF_GEN_INSN3_GVEC(pcmpgtw, Pq, Pq, Qq, cmp, MM_OPRSZ, MM_MAXSZ, MO_16, TCG_COND
 DEF_GEN_INSN3_GVEC(pcmpgtw, Vdq, Vdq, Wdq, cmp, XMM_OPRSZ, XMM_MAXSZ, MO_16, TCG_COND_GT)
 DEF_GEN_INSN3_GVEC(pcmpgtd, Pq, Pq, Qq, cmp, MM_OPRSZ, MM_MAXSZ, MO_32, TCG_COND_GT)
 DEF_GEN_INSN3_GVEC(pcmpgtd, Vdq, Vdq, Wdq, cmp, XMM_OPRSZ, XMM_MAXSZ, MO_32, TCG_COND_GT)
+DEF_GEN_INSN3_GVEC(pcmpgtq, Vdq, Vdq, Wdq, cmp, XMM_OPRSZ, XMM_MAXSZ, MO_64, TCG_COND_GT)
+
+DEF_GEN_INSN3_HELPER_EPPI(pcmpestrm, pcmpestrm_xmm, Vdq, Wdq, Ib)
+DEF_GEN_INSN3_HELPER_EPPI(pcmpestri, pcmpestri_xmm, Vdq, Wdq, Ib)
+DEF_GEN_INSN3_HELPER_EPPI(pcmpistrm, pcmpistrm_xmm, Vdq, Wdq, Ib)
+DEF_GEN_INSN3_HELPER_EPPI(pcmpistri, pcmpistri_xmm, Vdq, Wdq, Ib)
 
 DEF_GEN_INSN2_HELPER_EPP(ptest, ptest_xmm, Vdq, Wdq)
 
