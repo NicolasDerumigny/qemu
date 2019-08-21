@@ -4564,15 +4564,15 @@ static bool check_cpuid(CPUX86State *env, DisasContext *s, CheckCpuidFeat feat)
     case CHECK_CPUID_PCLMULQDQ:
         return s->cpuid_ext_features & CPUID_EXT_PCLMULQDQ;
     case CHECK_CPUID_AVX:
-        return s->cpuid_ext_features & CPUID_EXT_AVX;
+        return true /* s->cpuid_ext_features & CPUID_EXT_AVX */;
     case CHECK_CPUID_AES_AVX:
-        return (s->cpuid_ext_features & CPUID_EXT_AES)
-            && (s->cpuid_ext_features & CPUID_EXT_AVX);
+        return s->cpuid_ext_features & CPUID_EXT_AES
+            /* && (s->cpuid_ext_features & CPUID_EXT_AVX) */;
     case CHECK_CPUID_PCLMULQDQ_AVX:
-        return (s->cpuid_ext_features & CPUID_EXT_PCLMULQDQ)
-            && (s->cpuid_ext_features & CPUID_EXT_AVX);
+        return s->cpuid_ext_features & CPUID_EXT_PCLMULQDQ
+            /* && (s->cpuid_ext_features & CPUID_EXT_AVX) */;
     case CHECK_CPUID_AVX2:
-        return s->cpuid_7_0_ebx_features & CPUID_7_0_EBX_AVX2;
+        return true /* s->cpuid_7_0_ebx_features & CPUID_7_0_EBX_AVX2 */;
     default:
         g_assert_not_reached();
     }
