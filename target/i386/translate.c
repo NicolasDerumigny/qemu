@@ -22,6 +22,7 @@
 #include "cpu.h"
 #include "disas/disas.h"
 #include "exec/exec-all.h"
+#include "tcg-gvec-desc.h"
 #include "tcg-op.h"
 #include "exec/cpu_ldst.h"
 #include "exec/translator.h"
@@ -4476,6 +4477,44 @@ static void gen_sse(CPUX86State *env, DisasContext *s, int b)
         }
     }
 }
+
+#define gen_gvec_mov(dofs, aofs, oprsz, maxsz, vece)    \
+    tcg_gen_gvec_mov(vece, dofs, aofs, oprsz, maxsz)
+
+#define gen_gvec_add(dofs, aofs, bofs, oprsz, maxsz, vece)      \
+    tcg_gen_gvec_add(vece, dofs, aofs, bofs, oprsz, maxsz)
+#define gen_gvec_sub(dofs, aofs, bofs, oprsz, maxsz, vece)      \
+    tcg_gen_gvec_sub(vece, dofs, aofs, bofs, oprsz, maxsz)
+
+#define gen_gvec_ssadd(dofs, aofs, bofs, oprsz, maxsz, vece)    \
+    tcg_gen_gvec_ssadd(vece, dofs, aofs, bofs, oprsz, maxsz)
+#define gen_gvec_sssub(dofs, aofs, bofs, oprsz, maxsz, vece)    \
+    tcg_gen_gvec_sssub(vece, dofs, aofs, bofs, oprsz, maxsz)
+#define gen_gvec_usadd(dofs, aofs, bofs, oprsz, maxsz, vece)    \
+    tcg_gen_gvec_usadd(vece, dofs, aofs, bofs, oprsz, maxsz)
+#define gen_gvec_ussub(dofs, aofs, bofs, oprsz, maxsz, vece)    \
+    tcg_gen_gvec_ussub(vece, dofs, aofs, bofs, oprsz, maxsz)
+
+#define gen_gvec_smin(dofs, aofs, bofs, oprsz, maxsz, vece)     \
+    tcg_gen_gvec_smin(vece, dofs, aofs, bofs, oprsz, maxsz)
+#define gen_gvec_umin(dofs, aofs, bofs, oprsz, maxsz, vece)     \
+    tcg_gen_gvec_umin(vece, dofs, aofs, bofs, oprsz, maxsz)
+#define gen_gvec_smax(dofs, aofs, bofs, oprsz, maxsz, vece)     \
+    tcg_gen_gvec_smax(vece, dofs, aofs, bofs, oprsz, maxsz)
+#define gen_gvec_umax(dofs, aofs, bofs, oprsz, maxsz, vece)     \
+    tcg_gen_gvec_umax(vece, dofs, aofs, bofs, oprsz, maxsz)
+
+#define gen_gvec_and(dofs, aofs, bofs, oprsz, maxsz, vece)      \
+    tcg_gen_gvec_and(vece, dofs, aofs, bofs, oprsz, maxsz)
+#define gen_gvec_andn(dofs, aofs, bofs, oprsz, maxsz, vece)     \
+    tcg_gen_gvec_andc(vece, dofs, bofs, aofs, oprsz, maxsz)
+#define gen_gvec_or(dofs, aofs, bofs, oprsz, maxsz, vece)       \
+    tcg_gen_gvec_or(vece, dofs, aofs, bofs, oprsz, maxsz)
+#define gen_gvec_xor(dofs, aofs, bofs, oprsz, maxsz, vece)      \
+    tcg_gen_gvec_xor(vece, dofs, aofs, bofs, oprsz, maxsz)
+
+#define gen_gvec_cmp(dofs, aofs, bofs, oprsz, maxsz, vece, cond)        \
+    tcg_gen_gvec_cmp(cond, vece, dofs, aofs, bofs, oprsz, maxsz)
 
 static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
 {
