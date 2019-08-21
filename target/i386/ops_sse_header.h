@@ -58,12 +58,12 @@ DEF_HELPER_3(glue(pslldqi, SUFFIX), void, Reg, Reg, i32)
 DEF_HELPER_3(glue(psrldqi, SUFFIX), void, Reg, Reg, i32)
 #endif
 
-DEF_HELPER_3(glue(pmullw, SUFFIX), void, env, Reg, Reg)
+DEF_HELPER_4(glue(pmullw, SUFFIX), void, Reg, Reg, Reg, i32)
 #if SHIFT == 0
 DEF_HELPER_3(glue(pmulhrw, SUFFIX), void, env, Reg, Reg)
 #endif
-DEF_HELPER_3(glue(pmulhuw, SUFFIX), void, env, Reg, Reg)
-DEF_HELPER_3(glue(pmulhw, SUFFIX), void, env, Reg, Reg)
+DEF_HELPER_4(glue(pmulhuw, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_4(glue(pmulhw, SUFFIX), void, Reg, Reg, Reg, i32)
 
 DEF_HELPER_3(glue(pavgb, SUFFIX), void, env, Reg, Reg)
 DEF_HELPER_3(glue(pavgw, SUFFIX), void, env, Reg, Reg)

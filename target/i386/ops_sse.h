@@ -412,20 +412,50 @@ static inline int satsw(int x)
     }
 }
 
-#define FMULLW(a, b) ((a) * (b))
 #define FMULHRW(a, b) (((int16_t)(a) * (int16_t)(b) + 0x8000) >> 16)
-#define FMULHUW(a, b) ((a) * (b) >> 16)
-#define FMULHW(a, b) ((int16_t)(a) * (int16_t)(b) >> 16)
 
 #define FAVG(a, b) (((a) + (b) + 1) >> 1)
 #endif
 
-SSE_HELPER_W(helper_pmullw, FMULLW)
+void glue(helper_pmullw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
+{
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint16_t) < oprsz; ++i) {
+        const uint32_t t = (uint32_t)a->W(i) * (uint32_t)b->W(i);
+        d->W(i) = t;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
 #if SHIFT == 0
 SSE_HELPER_W(helper_pmulhrw, FMULHRW)
 #endif
-SSE_HELPER_W(helper_pmulhuw, FMULHUW)
-SSE_HELPER_W(helper_pmulhw, FMULHW)
+
+void glue(helper_pmulhuw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
+{
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint16_t) < oprsz; ++i) {
+        const uint32_t t = (uint32_t)a->W(i) * (uint32_t)b->W(i);
+        d->W(i) = t >> 16;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+void glue(helper_pmulhw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
+{
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint16_t) < oprsz; ++i) {
+        const int32_t t = (int32_t)a->W(i) * (int32_t)b->W(i);
+        d->W(i) = t >> 16;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
 
 SSE_HELPER_B(helper_pavgb, FAVG)
 SSE_HELPER_W(helper_pavgw, FAVG)
