@@ -4516,6 +4516,68 @@ static void gen_sse(CPUX86State *env, DisasContext *s, int b)
 #define gen_gvec_cmp(dofs, aofs, bofs, oprsz, maxsz, vece, cond)        \
     tcg_gen_gvec_cmp(cond, vece, dofs, aofs, bofs, oprsz, maxsz)
 
+typedef enum {
+    CHECK_CPUID_MMX = 1,
+    CHECK_CPUID_3DNOW,
+    CHECK_CPUID_SSE,
+    CHECK_CPUID_SSE2,
+    CHECK_CPUID_CLFLUSH,
+    CHECK_CPUID_SSE3,
+    CHECK_CPUID_SSSE3,
+    CHECK_CPUID_SSE4_1,
+    CHECK_CPUID_SSE4_2,
+    CHECK_CPUID_SSE4A,
+    CHECK_CPUID_AES,
+    CHECK_CPUID_PCLMULQDQ,
+    CHECK_CPUID_AVX,
+    CHECK_CPUID_AES_AVX,
+    CHECK_CPUID_PCLMULQDQ_AVX,
+    CHECK_CPUID_AVX2,
+} CheckCpuidFeat;
+
+static bool check_cpuid(CPUX86State *env, DisasContext *s, CheckCpuidFeat feat)
+{
+    switch (feat) {
+    case CHECK_CPUID_MMX:
+        return (s->cpuid_features & CPUID_MMX)
+            && (s->cpuid_ext2_features & CPUID_EXT2_MMX);
+    case CHECK_CPUID_3DNOW:
+        return s->cpuid_ext2_features & CPUID_EXT2_3DNOW;
+    case CHECK_CPUID_SSE:
+        return s->cpuid_features & CPUID_SSE;
+    case CHECK_CPUID_SSE2:
+        return s->cpuid_features & CPUID_SSE2;
+    case CHECK_CPUID_CLFLUSH:
+        return s->cpuid_features & CPUID_CLFLUSH;
+    case CHECK_CPUID_SSE3:
+        return s->cpuid_ext_features & CPUID_EXT_SSE3;
+    case CHECK_CPUID_SSSE3:
+        return s->cpuid_ext_features & CPUID_EXT_SSSE3;
+    case CHECK_CPUID_SSE4_1:
+        return s->cpuid_ext_features & CPUID_EXT_SSE41;
+    case CHECK_CPUID_SSE4_2:
+        return s->cpuid_ext_features & CPUID_EXT_SSE42;
+    case CHECK_CPUID_SSE4A:
+        return s->cpuid_ext3_features & CPUID_EXT3_SSE4A;
+    case CHECK_CPUID_AES:
+        return s->cpuid_ext_features & CPUID_EXT_AES;
+    case CHECK_CPUID_PCLMULQDQ:
+        return s->cpuid_ext_features & CPUID_EXT_PCLMULQDQ;
+    case CHECK_CPUID_AVX:
+        return s->cpuid_ext_features & CPUID_EXT_AVX;
+    case CHECK_CPUID_AES_AVX:
+        return (s->cpuid_ext_features & CPUID_EXT_AES)
+            && (s->cpuid_ext_features & CPUID_EXT_AVX);
+    case CHECK_CPUID_PCLMULQDQ_AVX:
+        return (s->cpuid_ext_features & CPUID_EXT_PCLMULQDQ)
+            && (s->cpuid_ext_features & CPUID_EXT_AVX);
+    case CHECK_CPUID_AVX2:
+        return s->cpuid_7_0_ebx_features & CPUID_7_0_EBX_AVX2;
+    default:
+        g_assert_not_reached();
+    }
+}
+
 static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
 {
     enum {
