@@ -76,10 +76,6 @@ DEF_HELPER_4(glue(pmaddwd, SUFFIX), void, Reg, Reg, Reg, i32)
 
 DEF_HELPER_4(glue(psadbw, SUFFIX), void, Reg, Reg, Reg, i32)
 DEF_HELPER_4(glue(maskmov, SUFFIX), void, env, Reg, Reg, tl)
-DEF_HELPER_2(glue(movl_mm_T0, SUFFIX), void, Reg, i32)
-#ifdef TARGET_X86_64
-DEF_HELPER_2(glue(movq_mm_T0, SUFFIX), void, Reg, i64)
-#endif
 
 #if SHIFT == 0
 DEF_HELPER_3(glue(pshufw, SUFFIX), void, Reg, Reg, int)

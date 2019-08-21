@@ -3079,39 +3079,6 @@ static void gen_sse(CPUX86State *env, DisasContext *s, int b)
                 gen_op_st_v(s, MO_32, s->T0, s->A0);
             }
             break;
-        case 0x6e: /* movd mm, ea */
-#ifdef TARGET_X86_64
-            if (s->dflag == MO_64) {
-                gen_ldst_modrm(env, s, modrm, MO_64, OR_TMP0, 0);
-                tcg_gen_st_tl(s->T0, cpu_env,
-                              offsetof(CPUX86State, fpregs[reg].mmx));
-            } else
-#endif
-            {
-                gen_ldst_modrm(env, s, modrm, MO_32, OR_TMP0, 0);
-                tcg_gen_addi_ptr(s->ptr0, cpu_env,
-                                 offsetof(CPUX86State,fpregs[reg].mmx));
-                tcg_gen_trunc_tl_i32(s->tmp2_i32, s->T0);
-                gen_helper_movl_mm_T0_mmx(s->ptr0, s->tmp2_i32);
-            }
-            break;
-        case 0x16e: /* movd xmm, ea */
-#ifdef TARGET_X86_64
-            if (s->dflag == MO_64) {
-                gen_ldst_modrm(env, s, modrm, MO_64, OR_TMP0, 0);
-                tcg_gen_addi_ptr(s->ptr0, cpu_env,
-                                 offsetof(CPUX86State,xmm_regs[reg]));
-                gen_helper_movq_mm_T0_xmm(s->ptr0, s->T0);
-            } else
-#endif
-            {
-                gen_ldst_modrm(env, s, modrm, MO_32, OR_TMP0, 0);
-                tcg_gen_addi_ptr(s->ptr0, cpu_env,
-                                 offsetof(CPUX86State,xmm_regs[reg]));
-                tcg_gen_trunc_tl_i32(s->tmp2_i32, s->T0);
-                gen_helper_movl_mm_T0_xmm(s->ptr0, s->tmp2_i32);
-            }
-            break;
         case 0x6f: /* movq mm, ea */
             if (mod != 3) {
                 gen_lea_modrm(env, s, modrm);

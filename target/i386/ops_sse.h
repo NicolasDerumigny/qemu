@@ -550,25 +550,6 @@ void glue(helper_maskmov, SUFFIX)(CPUX86State *env, Reg *a, Reg *b,
     }
 }
 
-void glue(helper_movl_mm_T0, SUFFIX)(Reg *d, uint32_t val)
-{
-    d->L(0) = val;
-    d->L(1) = 0;
-#if SHIFT == 1
-    d->Q(1) = 0;
-#endif
-}
-
-#ifdef TARGET_X86_64
-void glue(helper_movq_mm_T0, SUFFIX)(Reg *d, uint64_t val)
-{
-    d->Q(0) = val;
-#if SHIFT == 1
-    d->Q(1) = 0;
-#endif
-}
-#endif
-
 #if SHIFT == 0
 void glue(helper_pshufw, SUFFIX)(Reg *d, Reg *s, int order)
 {
