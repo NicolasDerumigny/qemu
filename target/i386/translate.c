@@ -4486,19 +4486,11 @@ static void gen_sse(CPUX86State *env, DisasContext *s, int b,
     }
 }
 
-/* convert one instruction. s->base.is_jmp is set if the translation must
-   be stopped. Return the next pc value */
-static target_ulong disas_insn(DisasContext *s, CPUState *cpu)
+static int disas_insn_prefix(DisasContext *s, CPUX86State *env)
 {
-    CPUX86State *env = cpu->env_ptr;
     int b, prefixes;
-    int shift;
-    TCGMemOp ot, aflag, dflag;
-    int modrm, reg, rm, mod, op, opreg, val;
-    target_ulong next_eip, tval;
-    target_ulong pc_start = s->base.pc_next;
+    TCGMemOp aflag, dflag;
 
-    s->pc_start = s->pc = pc_start;
     s->override = -1;
 #ifdef TARGET_X86_64
     s->rex_x = 0;
@@ -4510,10 +4502,6 @@ static target_ulong disas_insn(DisasContext *s, CPUState *cpu)
     s->rip_offset = 0; /* for relative ip address */
     s->vex_l = 0;
     s->vex_v = 0;
-    if (sigsetjmp(s->jmpbuf, 0) != 0) {
-        gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
-        return s->pc;
-    }
 
     prefixes = 0;
 
@@ -4657,6 +4645,38 @@ static target_ulong disas_insn(DisasContext *s, CPUState *cpu)
     s->prefix = prefixes;
     s->aflag = aflag;
     s->dflag = dflag;
+    return b;
+illegal_op:
+    gen_illegal_opcode(s);
+    return -1;
+unknown_op:
+    gen_unknown_opcode(env, s);
+    return -1;
+}
+
+/*
+ * convert one instruction. s->base.is_jmp is set if the translation must
+ * be stopped. Return the next pc value.
+ */
+static target_ulong disas_insn(DisasContext *s, CPUState *cpu)
+{
+    CPUX86State *env = cpu->env_ptr;
+    int b, shift;
+    TCGMemOp ot;
+    int modrm, reg, rm, mod, op, opreg, val;
+    target_ulong next_eip, tval;
+    target_ulong pc_start = s->base.pc_next;
+
+    s->pc_start = s->pc = pc_start;
+    if (sigsetjmp(s->jmpbuf, 0) != 0) {
+        gen_exception(s, EXCP0D_GPF, pc_start - s->cs_base);
+        return s->pc;
+    }
+
+    b = disas_insn_prefix(s, env);
+    if (b < 0) {
+        return s->pc;
+    }
 
     /* now check op code */
  reswitch:
