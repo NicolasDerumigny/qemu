@@ -4578,6 +4578,34 @@ static bool check_cpuid(CPUX86State *env, DisasContext *s, CheckCpuidFeat feat)
     }
 }
 
+/*
+ * Instruction operand
+ */
+#define insnop_arg_t(opT)    insnop_ ## opT ## _arg_t
+#define insnop_ctxt_t(opT)   insnop_ ## opT ## _ctxt_t
+#define insnop_init(opT)     insnop_ ## opT ## _init
+#define insnop_prepare(opT)  insnop_ ## opT ## _prepare
+#define insnop_finalize(opT) insnop_ ## opT ## _finalize
+
+#define INSNOP_INIT(opT)                                        \
+    static bool insnop_init(opT)(insnop_ctxt_t(opT) *ctxt,      \
+                                 CPUX86State *env,              \
+                                 DisasContext *s,               \
+                                 int modrm, bool is_write)
+
+#define INSNOP_PREPARE(opT)                                             \
+    static insnop_arg_t(opT) insnop_prepare(opT)(insnop_ctxt_t(opT) *ctxt, \
+                                                 CPUX86State *env,      \
+                                                 DisasContext *s,       \
+                                                 int modrm, bool is_write)
+
+#define INSNOP_FINALIZE(opT)                                    \
+    static void insnop_finalize(opT)(insnop_ctxt_t(opT) *ctxt,  \
+                                     CPUX86State *env,          \
+                                     DisasContext *s,           \
+                                     int modrm, bool is_write,  \
+                                     insnop_arg_t(opT) arg)
+
 static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
 {
     enum {
