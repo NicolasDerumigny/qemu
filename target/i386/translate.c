@@ -4670,6 +4670,63 @@ static bool check_cpuid(CPUX86State *env, DisasContext *s, CheckCpuidFeat feat)
                                  env, s, modrm, is_write, arg));        \
     }
 
+/*
+ * Generic load-store operand
+ */
+#define insnop_ldst(opTarg, opTptr)             \
+    insnop_ldst_ ## opTarg ## opTptr
+
+#define INSNOP_LDST(opTarg, opTptr)                                     \
+    static void insnop_ldst(opTarg, opTptr)(CPUX86State *env,           \
+                                            DisasContext *s,            \
+                                            bool is_write,              \
+                                            insnop_arg_t(opTarg) arg,   \
+                                            insnop_arg_t(opTptr) ptr)
+
+#define DEF_INSNOP_LDST(opT, opTarg, opTptr)                            \
+    typedef insnop_arg_t(opTarg) insnop_arg_t(opT);                     \
+    typedef struct {                                                    \
+        insnop_ctxt_t(opTarg) arg_ctxt;                                 \
+        insnop_ctxt_t(opTptr) ptr_ctxt;                                 \
+        insnop_arg_t(opTptr) ptr;                                       \
+    } insnop_ctxt_t(opT);                                               \
+                                                                        \
+    /* forward declaration */                                           \
+    INSNOP_LDST(opTarg, opTptr);                                        \
+                                                                        \
+    INSNOP_INIT(opT)                                                    \
+    {                                                                   \
+        return insnop_init(opTarg)(&ctxt->arg_ctxt,                     \
+                                   env, s, modrm, is_write)             \
+            && insnop_init(opTptr)(&ctxt->ptr_ctxt,                     \
+                                   env, s, modrm, is_write);            \
+    }                                                                   \
+    INSNOP_PREPARE(opT)                                                 \
+    {                                                                   \
+        const insnop_arg_t(opTarg) arg =                                \
+            insnop_prepare(opTarg)(&ctxt->arg_ctxt,                     \
+                                   env, s, modrm, is_write);            \
+        ctxt->ptr =                                                     \
+            insnop_prepare(opTptr)(&ctxt->ptr_ctxt,                     \
+                                   env, s, modrm, is_write);            \
+        if (!is_write) {                                                \
+            insnop_ldst(opTarg, opTptr)(env, s, is_write,               \
+                                        arg, ctxt->ptr);                \
+        }                                                               \
+        return arg;                                                     \
+    }                                                                   \
+    INSNOP_FINALIZE(opT)                                                \
+    {                                                                   \
+        if (is_write) {                                                 \
+            insnop_ldst(opTarg, opTptr)(env, s, is_write,               \
+                                        arg, ctxt->ptr);                \
+        }                                                               \
+        insnop_finalize(opTptr)(&ctxt->ptr_ctxt,                        \
+                                env, s, modrm, is_write, ctxt->ptr);    \
+        insnop_finalize(opTarg)(&ctxt->arg_ctxt,                        \
+                                env, s, modrm, is_write, arg);          \
+    }
+
 static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
 {
     enum {
