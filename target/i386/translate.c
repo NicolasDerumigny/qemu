@@ -2801,42 +2801,21 @@ static const SSEFunc_0_epp sse_op_table1[256][4] = {
     [0xc4] = { SSE_SPECIAL, SSE_SPECIAL }, /* pinsrw */
     [0xc5] = { SSE_SPECIAL, SSE_SPECIAL }, /* pextrw */
     [0xd0] = { NULL, gen_helper_addsubpd, NULL, gen_helper_addsubps },
-    [0xd1] = MMX_OP2(psrlw),
-    [0xd2] = MMX_OP2(psrld),
-    [0xd3] = MMX_OP2(psrlq),
     [0xd5] = MMX_OP2(pmullw),
     [0xd6] = { NULL, SSE_SPECIAL, SSE_SPECIAL, SSE_SPECIAL },
     [0xd7] = { SSE_SPECIAL, SSE_SPECIAL }, /* pmovmskb */
     [0xe0] = MMX_OP2(pavgb),
-    [0xe1] = MMX_OP2(psraw),
-    [0xe2] = MMX_OP2(psrad),
     [0xe3] = MMX_OP2(pavgw),
     [0xe4] = MMX_OP2(pmulhuw),
     [0xe5] = MMX_OP2(pmulhw),
     [0xe6] = { NULL, gen_helper_cvttpd2dq, gen_helper_cvtdq2pd, gen_helper_cvtpd2dq },
     [0xe7] = { SSE_SPECIAL , SSE_SPECIAL },  /* movntq, movntq */
     [0xf0] = { NULL, NULL, NULL, SSE_SPECIAL }, /* lddqu */
-    [0xf1] = MMX_OP2(psllw),
-    [0xf2] = MMX_OP2(pslld),
-    [0xf3] = MMX_OP2(psllq),
     [0xf4] = MMX_OP2(pmuludq),
     [0xf5] = MMX_OP2(pmaddwd),
     [0xf6] = MMX_OP2(psadbw),
     [0xf7] = { (SSEFunc_0_epp)gen_helper_maskmov_mmx,
                (SSEFunc_0_epp)gen_helper_maskmov_xmm }, /* XXX: casts */
-};
-
-static const SSEFunc_0_epp sse_op_table2[3 * 8][2] = {
-    [0 + 2] = MMX_OP2(psrlw),
-    [0 + 4] = MMX_OP2(psraw),
-    [0 + 6] = MMX_OP2(psllw),
-    [8 + 2] = MMX_OP2(psrld),
-    [8 + 4] = MMX_OP2(psrad),
-    [8 + 6] = MMX_OP2(pslld),
-    [16 + 2] = MMX_OP2(psrlq),
-    [16 + 3] = { NULL, gen_helper_psrldq_xmm },
-    [16 + 6] = MMX_OP2(psllq),
-    [16 + 7] = { NULL, gen_helper_pslldq_xmm },
 };
 
 static const SSEFunc_0_epi sse_op_table3ai[] = {
@@ -3402,49 +3381,6 @@ static void gen_sse(CPUX86State *env, DisasContext *s, int b)
             } else {
                 goto illegal_op;
             }
-            break;
-        case 0x71: /* shift mm, im */
-        case 0x72:
-        case 0x73:
-        case 0x171: /* shift xmm, im */
-        case 0x172:
-        case 0x173:
-            if (b1 >= 2) {
-                goto unknown_op;
-            }
-            val = x86_ldub_code(env, s);
-            if (is_xmm) {
-                tcg_gen_movi_tl(s->T0, val);
-                tcg_gen_st32_tl(s->T0, cpu_env,
-                                offsetof(CPUX86State, xmm_t0.ZMM_L(0)));
-                tcg_gen_movi_tl(s->T0, 0);
-                tcg_gen_st32_tl(s->T0, cpu_env,
-                                offsetof(CPUX86State, xmm_t0.ZMM_L(1)));
-                op1_offset = offsetof(CPUX86State,xmm_t0);
-            } else {
-                tcg_gen_movi_tl(s->T0, val);
-                tcg_gen_st32_tl(s->T0, cpu_env,
-                                offsetof(CPUX86State, mmx_t0.MMX_L(0)));
-                tcg_gen_movi_tl(s->T0, 0);
-                tcg_gen_st32_tl(s->T0, cpu_env,
-                                offsetof(CPUX86State, mmx_t0.MMX_L(1)));
-                op1_offset = offsetof(CPUX86State,mmx_t0);
-            }
-            sse_fn_epp = sse_op_table2[((b - 1) & 3) * 8 +
-                                       (((modrm >> 3)) & 7)][b1];
-            if (!sse_fn_epp) {
-                goto unknown_op;
-            }
-            if (is_xmm) {
-                rm = (modrm & 7) | REX_B(s);
-                op2_offset = offsetof(CPUX86State,xmm_regs[rm]);
-            } else {
-                rm = (modrm & 7);
-                op2_offset = offsetof(CPUX86State,fpregs[rm].mmx);
-            }
-            tcg_gen_addi_ptr(s->ptr0, cpu_env, op2_offset);
-            tcg_gen_addi_ptr(s->ptr1, cpu_env, op1_offset);
-            sse_fn_epp(cpu_env, s->ptr0, s->ptr1);
             break;
         case 0x050: /* movmskps */
             rm = (modrm & 7) | REX_B(s);
@@ -6889,18 +6825,18 @@ DEF_GEN_INSN3_GVEC(xorpd, Vdq, Vdq, Wdq, xor, XMM_OPRSZ, XMM_MAXSZ, MO_64)
 DEF_GEN_INSN3_GVEC(vxorpd, Vdq, Hdq, Wdq, xor, XMM_OPRSZ, XMM_MAXSZ, MO_64)
 DEF_GEN_INSN3_GVEC(vxorpd, Vqq, Hqq, Wqq, xor, XMM_OPRSZ, XMM_MAXSZ, MO_64)
 
-DEF_GEN_INSN3_HELPER_EPP(psllw, psllw_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(psllw, psllw_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsllw, psllw_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsllw, psllw_xmm, Vqq, Hqq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(pslld, pslld_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(pslld, pslld_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpslld, pslld_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpslld, pslld_xmm, Vqq, Hqq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(psllq, psllq_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(psllq, psllq_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsllq, psllq_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsllq, psllq_xmm, Vqq, Hqq, Wdq)
+DEF_GEN_INSN3_GVEC(psllw, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, psllw_mmx)
+DEF_GEN_INSN3_GVEC(psllw, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psllw_xmm)
+DEF_GEN_INSN3_GVEC(vpsllw, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psllw_xmm)
+DEF_GEN_INSN3_GVEC(vpsllw, Vqq, Hqq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psllw_xmm)
+DEF_GEN_INSN3_GVEC(pslld, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, pslld_mmx)
+DEF_GEN_INSN3_GVEC(pslld, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pslld_xmm)
+DEF_GEN_INSN3_GVEC(vpslld, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pslld_xmm)
+DEF_GEN_INSN3_GVEC(vpslld, Vqq, Hqq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pslld_xmm)
+DEF_GEN_INSN3_GVEC(psllq, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, psllq_mmx)
+DEF_GEN_INSN3_GVEC(psllq, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psllq_xmm)
+DEF_GEN_INSN3_GVEC(vpsllq, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psllq_xmm)
+DEF_GEN_INSN3_GVEC(vpsllq, Vqq, Hqq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psllq_xmm)
 
 GEN_INSN3(vpsllvd, Vdq, Hdq, Wdq)
 {
@@ -6920,21 +6856,18 @@ GEN_INSN3(vpsllvq, Vqq, Hqq, Wqq)
     /* XXX TODO implement this */
 }
 
-DEF_GEN_INSN3_HELPER_EPP(pslldq, pslldq_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpslldq, pslldq_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpslldq, pslldq_xmm, Vqq, Hqq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(psrlw, psrlw_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(psrlw, psrlw_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsrlw, psrlw_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsrlw, psrlw_xmm, Vqq, Hqq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(psrld, psrld_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(psrld, psrld_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsrld, psrld_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsrld, psrld_xmm, Vqq, Hqq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(psrlq, psrlq_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(psrlq, psrlq_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsrlq, psrlq_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsrlq, psrlq_xmm, Vqq, Hqq, Wdq)
+DEF_GEN_INSN3_GVEC(psrlw, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, psrlw_mmx)
+DEF_GEN_INSN3_GVEC(psrlw, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrlw_xmm)
+DEF_GEN_INSN3_GVEC(vpsrlw, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrlw_xmm)
+DEF_GEN_INSN3_GVEC(vpsrlw, Vqq, Hqq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrlw_xmm)
+DEF_GEN_INSN3_GVEC(psrld, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, psrld_mmx)
+DEF_GEN_INSN3_GVEC(psrld, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrld_xmm)
+DEF_GEN_INSN3_GVEC(vpsrld, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrld_xmm)
+DEF_GEN_INSN3_GVEC(vpsrld, Vqq, Hqq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrld_xmm)
+DEF_GEN_INSN3_GVEC(psrlq, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, psrlq_mmx)
+DEF_GEN_INSN3_GVEC(psrlq, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrlq_xmm)
+DEF_GEN_INSN3_GVEC(vpsrlq, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrlq_xmm)
+DEF_GEN_INSN3_GVEC(vpsrlq, Vqq, Hqq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrlq_xmm)
 
 GEN_INSN3(vpsrlvd, Vdq, Hdq, Wdq)
 {
@@ -6954,17 +6887,14 @@ GEN_INSN3(vpsrlvq, Vqq, Hqq, Wqq)
     /* XXX TODO implement this */
 }
 
-DEF_GEN_INSN3_HELPER_EPP(psrldq, psrldq_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsrldq, psrldq_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsrldq, psrldq_xmm, Vqq, Hqq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(psraw, psraw_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(psraw, psraw_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsraw, psraw_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsraw, psraw_xmm, Vqq, Hqq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(psrad, psrad_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(psrad, psrad_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsrad, psrad_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsrad, psrad_xmm, Vqq, Hqq, Wdq)
+DEF_GEN_INSN3_GVEC(psraw, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, psraw_mmx)
+DEF_GEN_INSN3_GVEC(psraw, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psraw_xmm)
+DEF_GEN_INSN3_GVEC(vpsraw, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psraw_xmm)
+DEF_GEN_INSN3_GVEC(vpsraw, Vqq, Hqq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psraw_xmm)
+DEF_GEN_INSN3_GVEC(psrad, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, psrad_mmx)
+DEF_GEN_INSN3_GVEC(psrad, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrad_xmm)
+DEF_GEN_INSN3_GVEC(vpsrad, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrad_xmm)
+DEF_GEN_INSN3_GVEC(vpsrad, Vqq, Hqq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psrad_xmm)
 
 GEN_INSN3(vpsravd, Vdq, Hdq, Wdq)
 {
@@ -6975,93 +6905,44 @@ GEN_INSN3(vpsravd, Vqq, Hqq, Wqq)
     /* XXX TODO implement this */
 }
 
-#define DEF_GEN_PSHIFT_IMM_MM(mnem, opT1, opT2)                         \
-    GEN_INSN3(mnem, opT1, opT2, Ib)                                     \
-    {                                                                   \
-        const uint64_t arg3_ui64 = (uint8_t)arg3;                       \
-        const insnop_arg_t(Eq) arg3_r64 = s->tmp1_i64;                  \
-        const insnop_arg_t(Qq) arg3_mm =                                \
-            offsetof(CPUX86State, mmx_t0.MMX_Q(0));                     \
-                                                                        \
-        tcg_gen_movi_i64(arg3_r64, arg3_ui64);                          \
-        gen_insn2(movq, Pq, Eq)(env, s, arg3_mm, arg3_r64);             \
-        gen_insn3(mnem, Pq, Pq, Qq)(env, s, arg1, arg2, arg3_mm);       \
-    }
-#define DEF_GEN_PSHIFT_IMM_XMM(mnem, opT1, opT2)                        \
-    GEN_INSN3(mnem, opT1, opT2, Ib)                                     \
-    {                                                                   \
-        const uint64_t arg3_ui64 = (uint8_t)arg3;                       \
-        const insnop_arg_t(Eq) arg3_r64 = s->tmp1_i64;                  \
-        const insnop_arg_t(Wdq) arg3_xmm =                              \
-            offsetof(CPUX86State, xmm_t0.ZMM_Q(0));                     \
-                                                                        \
-        tcg_gen_movi_i64(arg3_r64, arg3_ui64);                          \
-        gen_insn2(movq, Vdq, Eq)(env, s, arg3_xmm, arg3_r64);           \
-        gen_insn3(mnem, Vdq, Vdq, Wdq)(env, s, arg1, arg2, arg3_xmm);   \
-    }
-#define DEF_GEN_VPSHIFT_IMM_XMM(mnem, opT1, opT2)                       \
-    GEN_INSN3(mnem, opT1, opT2, Ib)                                     \
-    {                                                                   \
-        const uint64_t arg3_ui64 = (uint8_t)arg3;                       \
-        const insnop_arg_t(Eq) arg3_r64 = s->tmp1_i64;                  \
-        const insnop_arg_t(Wdq) arg3_xmm =                              \
-            offsetof(CPUX86State, xmm_t0.ZMM_Q(0));                     \
-                                                                        \
-        tcg_gen_movi_i64(arg3_r64, arg3_ui64);                          \
-        gen_insn2(movq, Vdq, Eq)(env, s, arg3_xmm, arg3_r64);           \
-        gen_insn3(mnem, Vdq, Hdq, Wdq)(env, s, arg2, arg2, arg3_xmm);   \
-    }
-#define DEF_GEN_VPSHIFT_IMM_YMM(mnem, opT1, opT2)                       \
-    GEN_INSN3(mnem, opT1, opT2, Ib)                                     \
-    {                                                                   \
-        const uint64_t arg3_ui64 = (uint8_t)arg3;                       \
-        const insnop_arg_t(Eq) arg3_r64 = s->tmp1_i64;                  \
-        const insnop_arg_t(Wdq) arg3_xmm =                              \
-            offsetof(CPUX86State, xmm_t0.ZMM_Q(0));                     \
-                                                                        \
-        tcg_gen_movi_i64(arg3_r64, arg3_ui64);                          \
-        gen_insn2(movq, Vdq, Eq)(env, s, arg3_xmm, arg3_r64);           \
-        gen_insn3(mnem, Vqq, Hqq, Wdq)(env, s, arg2, arg2, arg3_xmm);   \
-    }
-
-DEF_GEN_PSHIFT_IMM_MM(psllw, Nq, Nq)
-DEF_GEN_PSHIFT_IMM_XMM(psllw, Udq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpsllw, Hdq, Udq)
-DEF_GEN_VPSHIFT_IMM_YMM(vpsllw, Hqq, Uqq)
-DEF_GEN_PSHIFT_IMM_MM(pslld, Nq, Nq)
-DEF_GEN_PSHIFT_IMM_XMM(pslld, Udq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpslld, Hdq, Udq)
-DEF_GEN_VPSHIFT_IMM_YMM(vpslld, Hqq, Uqq)
-DEF_GEN_PSHIFT_IMM_MM(psllq, Nq, Nq)
-DEF_GEN_PSHIFT_IMM_XMM(psllq, Udq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpsllq, Hdq, Udq)
-DEF_GEN_VPSHIFT_IMM_YMM(vpsllq, Hqq, Uqq)
-DEF_GEN_PSHIFT_IMM_XMM(pslldq, Udq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpslldq, Hdq, Udq)
-DEF_GEN_VPSHIFT_IMM_YMM(vpslldq, Hqq, Uqq)
-DEF_GEN_PSHIFT_IMM_MM(psrlw, Nq, Nq)
-DEF_GEN_PSHIFT_IMM_XMM(psrlw, Udq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpsrlw, Hdq, Udq)
-DEF_GEN_VPSHIFT_IMM_YMM(vpsrlw, Hqq, Uqq)
-DEF_GEN_PSHIFT_IMM_MM(psrld, Nq, Nq)
-DEF_GEN_PSHIFT_IMM_XMM(psrld, Udq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpsrld, Hdq, Udq)
-DEF_GEN_VPSHIFT_IMM_YMM(vpsrld, Hqq, Uqq)
-DEF_GEN_PSHIFT_IMM_MM(psrlq, Nq, Nq)
-DEF_GEN_PSHIFT_IMM_XMM(psrlq, Udq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpsrlq, Hdq, Udq)
-DEF_GEN_VPSHIFT_IMM_YMM(vpsrlq, Hqq, Uqq)
-DEF_GEN_PSHIFT_IMM_XMM(psrldq, Udq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpsrldq, Hdq, Udq)
-DEF_GEN_VPSHIFT_IMM_YMM(vpsrldq, Hqq, Uqq)
-DEF_GEN_PSHIFT_IMM_MM(psraw, Nq, Nq)
-DEF_GEN_PSHIFT_IMM_XMM(psraw, Udq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpsraw, Hdq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpsraw, Hqq, Uqq)
-DEF_GEN_PSHIFT_IMM_MM(psrad, Nq, Nq)
-DEF_GEN_PSHIFT_IMM_XMM(psrad, Udq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpsrad, Hdq, Udq)
-DEF_GEN_VPSHIFT_IMM_XMM(vpsrad, Hqq, Uqq)
+DEF_GEN_INSN3_GVEC(psllw, Nq, Nq, Ib, 2i_ool, MM_OPRSZ, MM_MAXSZ, psllwi_xmm)
+DEF_GEN_INSN3_GVEC(psllw, Udq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psllwi_xmm)
+DEF_GEN_INSN3_GVEC(vpsllw, Hdq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psllwi_xmm)
+DEF_GEN_INSN3_GVEC(vpsllw, Hqq, Uqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psllwi_xmm)
+DEF_GEN_INSN3_GVEC(pslld, Nq, Nq, Ib, 2i_ool, MM_OPRSZ, MM_MAXSZ, pslldi_xmm)
+DEF_GEN_INSN3_GVEC(pslld, Udq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pslldi_xmm)
+DEF_GEN_INSN3_GVEC(vpslld, Hdq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pslldi_xmm)
+DEF_GEN_INSN3_GVEC(vpslld, Hqq, Uqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pslldi_xmm)
+DEF_GEN_INSN3_GVEC(psllq, Nq, Nq, Ib, 2i_ool, MM_OPRSZ, MM_MAXSZ, psllqi_xmm)
+DEF_GEN_INSN3_GVEC(psllq, Udq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psllqi_xmm)
+DEF_GEN_INSN3_GVEC(vpsllq, Hdq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psllqi_xmm)
+DEF_GEN_INSN3_GVEC(vpsllq, Hqq, Uqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psllqi_xmm)
+DEF_GEN_INSN3_GVEC(pslldq, Udq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pslldqi_xmm)
+DEF_GEN_INSN3_GVEC(vpslldq, Hdq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pslldqi_xmm)
+DEF_GEN_INSN3_GVEC(vpslldq, Hqq, Uqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pslldqi_xmm)
+DEF_GEN_INSN3_GVEC(psrlw, Nq, Nq, Ib, 2i_ool, MM_OPRSZ, MM_MAXSZ, psrlwi_xmm)
+DEF_GEN_INSN3_GVEC(psrlw, Udq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrlwi_xmm)
+DEF_GEN_INSN3_GVEC(vpsrlw, Hdq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrlwi_xmm)
+DEF_GEN_INSN3_GVEC(vpsrlw, Hqq, Uqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrlwi_xmm)
+DEF_GEN_INSN3_GVEC(psrld, Nq, Nq, Ib, 2i_ool, MM_OPRSZ, MM_MAXSZ, psrldi_xmm)
+DEF_GEN_INSN3_GVEC(psrld, Udq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrldi_xmm)
+DEF_GEN_INSN3_GVEC(vpsrld, Hdq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrldi_xmm)
+DEF_GEN_INSN3_GVEC(vpsrld, Hqq, Uqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrldi_xmm)
+DEF_GEN_INSN3_GVEC(psrlq, Nq, Nq, Ib, 2i_ool, MM_OPRSZ, MM_MAXSZ, psrlqi_xmm)
+DEF_GEN_INSN3_GVEC(psrlq, Udq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrlqi_xmm)
+DEF_GEN_INSN3_GVEC(vpsrlq, Hdq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrlqi_xmm)
+DEF_GEN_INSN3_GVEC(vpsrlq, Hqq, Uqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrlqi_xmm)
+DEF_GEN_INSN3_GVEC(psrldq, Udq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrldqi_xmm)
+DEF_GEN_INSN3_GVEC(vpsrldq, Hdq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrldqi_xmm)
+DEF_GEN_INSN3_GVEC(vpsrldq, Hqq, Uqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrldqi_xmm)
+DEF_GEN_INSN3_GVEC(psraw, Nq, Nq, Ib, 2i_ool, MM_OPRSZ, MM_MAXSZ, psrawi_xmm)
+DEF_GEN_INSN3_GVEC(psraw, Udq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrawi_xmm)
+DEF_GEN_INSN3_GVEC(vpsraw, Hdq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrawi_xmm)
+DEF_GEN_INSN3_GVEC(vpsraw, Hqq, Uqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psrawi_xmm)
+DEF_GEN_INSN3_GVEC(psrad, Nq, Nq, Ib, 2i_ool, MM_OPRSZ, MM_MAXSZ, psradi_xmm)
+DEF_GEN_INSN3_GVEC(psrad, Udq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psradi_xmm)
+DEF_GEN_INSN3_GVEC(vpsrad, Hdq, Udq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psradi_xmm)
+DEF_GEN_INSN3_GVEC(vpsrad, Hqq, Uqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, psradi_xmm)
 
 DEF_GEN_INSN4_HELPER_EPPI(palignr, palignr_mmx, Pq, Pq, Qq, Ib)
 DEF_GEN_INSN4_HELPER_EPPI(palignr, palignr_xmm, Vdq, Vdq, Wdq, Ib)

@@ -19,6 +19,7 @@
  */
 
 #include "crypto/aes.h"
+#include "tcg-gvec-desc.h"
 
 #if SHIFT == 0
 #define Reg MMXReg
@@ -38,199 +39,273 @@
 #define SUFFIX _xmm
 #endif
 
-void glue(helper_psrlw, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+static inline void glue(clear_high, SUFFIX)(Reg *d, intptr_t oprsz,
+                                            intptr_t maxsz)
 {
-    int shift;
+    intptr_t i;
 
-    if (s->Q(0) > 15) {
-        d->Q(0) = 0;
-#if SHIFT == 1
-        d->Q(1) = 0;
-#endif
-    } else {
-        shift = s->B(0);
-        d->W(0) >>= shift;
-        d->W(1) >>= shift;
-        d->W(2) >>= shift;
-        d->W(3) >>= shift;
-#if SHIFT == 1
-        d->W(4) >>= shift;
-        d->W(5) >>= shift;
-        d->W(6) >>= shift;
-        d->W(7) >>= shift;
-#endif
+    assert(oprsz % sizeof(uint64_t) == 0);
+    assert(maxsz % sizeof(uint64_t) == 0);
+
+    if (oprsz < maxsz) {
+        i = oprsz / sizeof(uint64_t);
+        for (; i * sizeof(uint64_t) < maxsz; ++i) {
+            d->Q(i) = 0;
+        }
     }
 }
 
-void glue(helper_psraw, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_psllw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
 {
-    int shift;
+    const uint64_t count = b->Q(0);
+    const intptr_t oprsz = count > 15 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
 
-    if (s->Q(0) > 15) {
-        shift = 15;
-    } else {
-        shift = s->B(0);
+    for (intptr_t i = 0; i * sizeof(uint16_t) < oprsz; ++i) {
+        d->W(i) = a->W(i) << count;
     }
-    d->W(0) = (int16_t)d->W(0) >> shift;
-    d->W(1) = (int16_t)d->W(1) >> shift;
-    d->W(2) = (int16_t)d->W(2) >> shift;
-    d->W(3) = (int16_t)d->W(3) >> shift;
-#if SHIFT == 1
-    d->W(4) = (int16_t)d->W(4) >> shift;
-    d->W(5) = (int16_t)d->W(5) >> shift;
-    d->W(6) = (int16_t)d->W(6) >> shift;
-    d->W(7) = (int16_t)d->W(7) >> shift;
-#endif
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_psllw, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_pslld, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
 {
-    int shift;
+    const uint64_t count = b->Q(0);
+    const intptr_t oprsz = count > 31 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
 
-    if (s->Q(0) > 15) {
-        d->Q(0) = 0;
-#if SHIFT == 1
-        d->Q(1) = 0;
-#endif
-    } else {
-        shift = s->B(0);
-        d->W(0) <<= shift;
-        d->W(1) <<= shift;
-        d->W(2) <<= shift;
-        d->W(3) <<= shift;
-#if SHIFT == 1
-        d->W(4) <<= shift;
-        d->W(5) <<= shift;
-        d->W(6) <<= shift;
-        d->W(7) <<= shift;
-#endif
+    for (intptr_t i = 0; i * sizeof(uint32_t) < oprsz; ++i) {
+        d->L(i) = a->L(i) << count;
     }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_psrld, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_psllq, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
 {
-    int shift;
+    const uint64_t count = b->Q(0);
+    const intptr_t oprsz = count > 63 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
 
-    if (s->Q(0) > 31) {
-        d->Q(0) = 0;
-#if SHIFT == 1
-        d->Q(1) = 0;
-#endif
-    } else {
-        shift = s->B(0);
-        d->L(0) >>= shift;
-        d->L(1) >>= shift;
-#if SHIFT == 1
-        d->L(2) >>= shift;
-        d->L(3) >>= shift;
-#endif
+    for (intptr_t i = 0; i * sizeof(uint64_t) < oprsz; ++i) {
+        d->Q(i) = a->Q(i) << count;
     }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_psrad, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_psllwi, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
 {
-    int shift;
+    const uint64_t count = simd_data(desc);
+    const intptr_t oprsz = count > 15 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
 
-    if (s->Q(0) > 31) {
-        shift = 31;
-    } else {
-        shift = s->B(0);
+    for (intptr_t i = 0; i * sizeof(uint16_t) < oprsz; ++i) {
+        d->W(i) = a->W(i) << count;
     }
-    d->L(0) = (int32_t)d->L(0) >> shift;
-    d->L(1) = (int32_t)d->L(1) >> shift;
-#if SHIFT == 1
-    d->L(2) = (int32_t)d->L(2) >> shift;
-    d->L(3) = (int32_t)d->L(3) >> shift;
-#endif
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_pslld, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_pslldi, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
 {
-    int shift;
+    const uint64_t count = simd_data(desc);
+    const intptr_t oprsz = count > 31 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
 
-    if (s->Q(0) > 31) {
-        d->Q(0) = 0;
-#if SHIFT == 1
-        d->Q(1) = 0;
-#endif
-    } else {
-        shift = s->B(0);
-        d->L(0) <<= shift;
-        d->L(1) <<= shift;
-#if SHIFT == 1
-        d->L(2) <<= shift;
-        d->L(3) <<= shift;
-#endif
+    for (intptr_t i = 0; i * sizeof(uint32_t) < oprsz; ++i) {
+        d->L(i) = a->L(i) << count;
     }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_psrlq, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_psllqi, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
 {
-    int shift;
+    const uint64_t count = simd_data(desc);
+    const intptr_t oprsz = count > 63 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
 
-    if (s->Q(0) > 63) {
-        d->Q(0) = 0;
-#if SHIFT == 1
-        d->Q(1) = 0;
-#endif
-    } else {
-        shift = s->B(0);
-        d->Q(0) >>= shift;
-#if SHIFT == 1
-        d->Q(1) >>= shift;
-#endif
+    for (intptr_t i = 0; i * sizeof(uint64_t) < oprsz; ++i) {
+        d->Q(i) = a->Q(i) << count;
     }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_psllq, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_psrlw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
 {
-    int shift;
+    const uint64_t count = b->Q(0);
+    const intptr_t oprsz = count > 15 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
 
-    if (s->Q(0) > 63) {
-        d->Q(0) = 0;
-#if SHIFT == 1
-        d->Q(1) = 0;
-#endif
-    } else {
-        shift = s->B(0);
-        d->Q(0) <<= shift;
-#if SHIFT == 1
-        d->Q(1) <<= shift;
-#endif
+    for (intptr_t i = 0; i * sizeof(uint16_t) < oprsz; ++i) {
+        d->W(i) = a->W(i) >> count;
     }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+void glue(helper_psrld, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
+{
+    const uint64_t count = b->Q(0);
+    const intptr_t oprsz = count > 31 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint32_t) < oprsz; ++i) {
+        d->L(i) = a->L(i) >> count;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+void glue(helper_psrlq, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
+{
+    const uint64_t count = b->Q(0);
+    const intptr_t oprsz = count > 63 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint64_t) < oprsz; ++i) {
+        d->Q(i) = a->Q(i) >> count;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+void glue(helper_psrlwi, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
+{
+    const uint64_t count = simd_data(desc);
+    const intptr_t oprsz = count > 15 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint16_t) < oprsz; ++i) {
+        d->W(i) = a->W(i) >> count;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+void glue(helper_psrldi, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
+{
+    const uint64_t count = simd_data(desc);
+    const intptr_t oprsz = count > 31 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint32_t) < oprsz; ++i) {
+        d->L(i) = a->L(i) >> count;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+void glue(helper_psrlqi, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
+{
+    const uint64_t count = simd_data(desc);
+    const intptr_t oprsz = count > 63 ? 0 : simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint64_t) < oprsz; ++i) {
+        d->Q(i) = a->Q(i) >> count;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+void glue(helper_psraw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
+{
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    uint64_t count = b->Q(0);
+    if (count > 15) {
+        count = 15;
+    }
+
+    for (intptr_t i = 0; i * sizeof(uint16_t) < oprsz; ++i) {
+        d->W(i) = (int16_t)a->W(i) >> count;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+void glue(helper_psrad, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
+{
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    uint64_t count = b->Q(0);
+    if (count > 31) {
+        count = 31;
+    }
+
+    for (intptr_t i = 0; i * sizeof(uint32_t) < oprsz; ++i) {
+        d->L(i) = (int32_t)a->L(i) >> count;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+void glue(helper_psrawi, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
+{
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    uint64_t count = simd_data(desc);
+    if (count > 15) {
+        count = 15;
+    }
+
+    for (intptr_t i = 0; i * sizeof(uint16_t) < oprsz; ++i) {
+        d->W(i) = (int16_t)a->W(i) >> count;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+void glue(helper_psradi, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
+{
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    uint64_t count = simd_data(desc);
+    if (count > 31) {
+        count = 31;
+    }
+
+    for (intptr_t i = 0; i * sizeof(uint32_t) < oprsz; ++i) {
+        d->L(i) = (int32_t)a->L(i) >> count;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
 #if SHIFT == 1
-void glue(helper_psrldq, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_pslldqi, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
 {
-    int shift, i;
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
 
-    shift = s->L(0);
-    if (shift > 16) {
-        shift = 16;
+    unsigned int count = simd_data(desc);
+    if (count > 16) {
+        count = 16;
     }
-    for (i = 0; i < 16 - shift; i++) {
-        d->B(i) = d->B(i + shift);
+
+    for (intptr_t i = 0; i < oprsz; i += 16) {
+        intptr_t j = 15;
+        for (; count <= j; --j) {
+            d->B(i + j) = a->B(i + j - count);
+        }
+        for (; 0 <= j; --j) {
+            d->B(i + j) = 0;
+        }
     }
-    for (i = 16 - shift; i < 16; i++) {
-        d->B(i) = 0;
-    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_pslldq, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_psrldqi, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
 {
-    int shift, i;
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
 
-    shift = s->L(0);
-    if (shift > 16) {
-        shift = 16;
+    unsigned int count = simd_data(desc);
+    if (count > 16) {
+        count = 16;
     }
-    for (i = 15; i >= shift; i--) {
-        d->B(i) = d->B(i - shift);
+
+    for (intptr_t i = 0; i < oprsz; i += 16) {
+        intptr_t j = 0;
+        for (; j + count < 16; ++j) {
+            d->B(i + j) = a->B(i + j + count);
+        }
+        for (; j < 16; ++j) {
+            d->B(i + j) = 0;
+        }
     }
-    for (i = 0; i < shift; i++) {
-        d->B(i) = 0;
-    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 #endif
 

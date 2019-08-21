@@ -34,18 +34,28 @@
 #define dh_is_signed_ZMMReg dh_is_signed_ptr
 #define dh_is_signed_MMXReg dh_is_signed_ptr
 
-DEF_HELPER_3(glue(psrlw, SUFFIX), void, env, Reg, Reg)
-DEF_HELPER_3(glue(psraw, SUFFIX), void, env, Reg, Reg)
-DEF_HELPER_3(glue(psllw, SUFFIX), void, env, Reg, Reg)
-DEF_HELPER_3(glue(psrld, SUFFIX), void, env, Reg, Reg)
-DEF_HELPER_3(glue(psrad, SUFFIX), void, env, Reg, Reg)
-DEF_HELPER_3(glue(pslld, SUFFIX), void, env, Reg, Reg)
-DEF_HELPER_3(glue(psrlq, SUFFIX), void, env, Reg, Reg)
-DEF_HELPER_3(glue(psllq, SUFFIX), void, env, Reg, Reg)
+DEF_HELPER_4(glue(psllw, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_4(glue(pslld, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_4(glue(psllq, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_3(glue(psllwi, SUFFIX), void, Reg, Reg, i32)
+DEF_HELPER_3(glue(pslldi, SUFFIX), void, Reg, Reg, i32)
+DEF_HELPER_3(glue(psllqi, SUFFIX), void, Reg, Reg, i32)
+
+DEF_HELPER_4(glue(psrlw, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_4(glue(psrld, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_4(glue(psrlq, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_3(glue(psrlwi, SUFFIX), void, Reg, Reg, i32)
+DEF_HELPER_3(glue(psrldi, SUFFIX), void, Reg, Reg, i32)
+DEF_HELPER_3(glue(psrlqi, SUFFIX), void, Reg, Reg, i32)
+
+DEF_HELPER_4(glue(psraw, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_4(glue(psrad, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_3(glue(psrawi, SUFFIX), void, Reg, Reg, i32)
+DEF_HELPER_3(glue(psradi, SUFFIX), void, Reg, Reg, i32)
 
 #if SHIFT == 1
-DEF_HELPER_3(glue(psrldq, SUFFIX), void, env, Reg, Reg)
-DEF_HELPER_3(glue(pslldq, SUFFIX), void, env, Reg, Reg)
+DEF_HELPER_3(glue(pslldqi, SUFFIX), void, Reg, Reg, i32)
+DEF_HELPER_3(glue(psrldqi, SUFFIX), void, Reg, Reg, i32)
 #endif
 
 DEF_HELPER_3(glue(pmullw, SUFFIX), void, env, Reg, Reg)
