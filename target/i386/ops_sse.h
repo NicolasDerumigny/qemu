@@ -1169,52 +1169,56 @@ void helper_comisd(CPUX86State *env, Reg *d, Reg *s)
     CC_SRC = comis_eflags[ret + 1];
 }
 
-uint32_t helper_movmskps(CPUX86State *env, Reg *s)
+uint32_t helper_movmskpsd(Reg *a, uint32_t desc)
 {
-    int b0, b1, b2, b3;
+    const intptr_t oprsz = simd_oprsz(desc);
 
-    b0 = s->ZMM_L(0) >> 31;
-    b1 = s->ZMM_L(1) >> 31;
-    b2 = s->ZMM_L(2) >> 31;
-    b3 = s->ZMM_L(3) >> 31;
-    return b0 | (b1 << 1) | (b2 << 2) | (b3 << 3);
+    uint32_t ret = 0;
+    for (intptr_t i = 0; i * sizeof(uint32_t) < oprsz; ++i) {
+        const uint32_t t = a->ZMM_L(i) & (1UL << 31);
+        ret |= t >> (31 - i);
+    }
+    return ret;
 }
 
-uint32_t helper_movmskpd(CPUX86State *env, Reg *s)
+uint64_t helper_movmskpsq(Reg *a, uint32_t desc)
 {
-    int b0, b1;
-
-    b0 = s->ZMM_L(1) >> 31;
-    b1 = s->ZMM_L(3) >> 31;
-    return b0 | (b1 << 1);
+    return helper_movmskpsd(a, desc);
 }
 
-#endif
-
-uint32_t glue(helper_pmovmskb, SUFFIX)(CPUX86State *env, Reg *s)
+uint32_t helper_movmskpdd(Reg *a, uint32_t desc)
 {
-    uint32_t val;
+    const intptr_t oprsz = simd_oprsz(desc);
 
-    val = 0;
-    val |= (s->B(0) >> 7);
-    val |= (s->B(1) >> 6) & 0x02;
-    val |= (s->B(2) >> 5) & 0x04;
-    val |= (s->B(3) >> 4) & 0x08;
-    val |= (s->B(4) >> 3) & 0x10;
-    val |= (s->B(5) >> 2) & 0x20;
-    val |= (s->B(6) >> 1) & 0x40;
-    val |= (s->B(7)) & 0x80;
-#if SHIFT == 1
-    val |= (s->B(8) << 1) & 0x0100;
-    val |= (s->B(9) << 2) & 0x0200;
-    val |= (s->B(10) << 3) & 0x0400;
-    val |= (s->B(11) << 4) & 0x0800;
-    val |= (s->B(12) << 5) & 0x1000;
-    val |= (s->B(13) << 6) & 0x2000;
-    val |= (s->B(14) << 7) & 0x4000;
-    val |= (s->B(15) << 8) & 0x8000;
+    uint32_t ret = 0;
+    for (intptr_t i = 0; i * sizeof(uint64_t) < oprsz; ++i) {
+        const uint64_t t = a->ZMM_Q(i) & (1ULL << 63);
+        ret |= t >> (63 - i);
+    }
+    return ret;
+}
+
+uint64_t helper_movmskpdq(Reg *a, uint32_t desc)
+{
+    return helper_movmskpdd(a, desc);
+}
 #endif
-    return val;
+
+uint32_t glue(helper_pmovmskbd, SUFFIX)(Reg *a, uint32_t desc)
+{
+    const intptr_t oprsz = simd_oprsz(desc);
+
+    uint32_t ret = 0;
+    for (intptr_t i = 0; i * sizeof(uint8_t) < oprsz; ++i) {
+        const uint8_t t = a->B(i) & (1 << 7);
+        ret |= i < 8 ? t >> (7 - i) : t << (i - 7);
+    }
+    return ret;
+}
+
+uint64_t glue(helper_pmovmskbq, SUFFIX)(Reg *a, uint32_t desc)
+{
+    return glue(helper_pmovmskbd, SUFFIX)(a, desc);
 }
 
 void glue(helper_packsswb, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)

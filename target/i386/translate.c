@@ -3339,20 +3339,6 @@ static void gen_sse(CPUX86State *env, DisasContext *s, int b)
                 goto illegal_op;
             }
             break;
-        case 0x050: /* movmskps */
-            rm = (modrm & 7) | REX_B(s);
-            tcg_gen_addi_ptr(s->ptr0, cpu_env,
-                             offsetof(CPUX86State,xmm_regs[rm]));
-            gen_helper_movmskps(s->tmp2_i32, cpu_env, s->ptr0);
-            tcg_gen_extu_i32_tl(cpu_regs[reg], s->tmp2_i32);
-            break;
-        case 0x150: /* movmskpd */
-            rm = (modrm & 7) | REX_B(s);
-            tcg_gen_addi_ptr(s->ptr0, cpu_env,
-                             offsetof(CPUX86State,xmm_regs[rm]));
-            gen_helper_movmskpd(s->tmp2_i32, cpu_env, s->ptr0);
-            tcg_gen_extu_i32_tl(cpu_regs[reg], s->tmp2_i32);
-            break;
         case 0x02a: /* cvtpi2ps */
         case 0x12a: /* cvtpi2pd */
             gen_helper_enter_mmx(cpu_env);
@@ -3523,24 +3509,6 @@ static void gen_sse(CPUX86State *env, DisasContext *s, int b)
             rm = (modrm & 7) | REX_B(s);
             gen_op_movq(s, offsetof(CPUX86State, fpregs[reg & 7].mmx),
                         offsetof(CPUX86State,xmm_regs[rm].ZMM_Q(0)));
-            break;
-        case 0xd7: /* pmovmskb */
-        case 0x1d7:
-            if (mod != 3)
-                goto illegal_op;
-            if (b1) {
-                rm = (modrm & 7) | REX_B(s);
-                tcg_gen_addi_ptr(s->ptr0, cpu_env,
-                                 offsetof(CPUX86State, xmm_regs[rm]));
-                gen_helper_pmovmskb_xmm(s->tmp2_i32, cpu_env, s->ptr0);
-            } else {
-                rm = (modrm & 7);
-                tcg_gen_addi_ptr(s->ptr0, cpu_env,
-                                 offsetof(CPUX86State, fpregs[rm].mmx));
-                gen_helper_pmovmskb_mmx(s->tmp2_i32, cpu_env, s->ptr0);
-            }
-            reg = ((modrm >> 3) & 7) | REX_R(s);
-            tcg_gen_extu_i32_tl(cpu_regs[reg], s->tmp2_i32);
             break;
 
         case 0x138:
@@ -5773,88 +5741,28 @@ GEN_INSN2(vmovhpd, Mq, Vdq)
     gen_insn2(movhpd, Mq, Vdq)(env, s, arg1, arg2);
 }
 
-DEF_GEN_INSN2_HELPER_DEP(pmovmskb, pmovmskb_mmx, Gd, Nq)
-GEN_INSN2(pmovmskb, Gq, Nq)
-{
-    const TCGv_i32 arg1_r32 = tcg_temp_new_i32();
-    gen_insn2(pmovmskb, Gd, Nq)(env, s, arg1_r32, arg2);
-    tcg_gen_extu_i32_i64(arg1, arg1_r32);
-    tcg_temp_free_i32(arg1_r32);
-}
-DEF_GEN_INSN2_HELPER_DEP(pmovmskb, pmovmskb_xmm, Gd, Udq)
-GEN_INSN2(pmovmskb, Gq, Udq)
-{
-    const TCGv_i32 arg1_r32 = tcg_temp_new_i32();
-    gen_insn2(pmovmskb, Gd, Udq)(env, s, arg1_r32, arg2);
-    tcg_gen_extu_i32_i64(arg1, arg1_r32);
-    tcg_temp_free_i32(arg1_r32);
-}
-DEF_GEN_INSN2_HELPER_DEP(vpmovmskb, pmovmskb_xmm, Gd, Udq)
-GEN_INSN2(vpmovmskb, Gq, Udq)
-{
-    const TCGv_i32 arg1_r32 = tcg_temp_new_i32();
-    gen_insn2(vpmovmskb, Gd, Udq)(env, s, arg1_r32, arg2);
-    tcg_gen_extu_i32_i64(arg1, arg1_r32);
-    tcg_temp_free_i32(arg1_r32);
-}
-DEF_GEN_INSN2_HELPER_DEP(vpmovmskb, pmovmskb_xmm, Gd, Uqq)
-GEN_INSN2(vpmovmskb, Gq, Uqq)
-{
-    const TCGv_i32 arg1_r32 = tcg_temp_new_i32();
-    gen_insn2(vpmovmskb, Gd, Uqq)(env, s, arg1_r32, arg2);
-    tcg_gen_extu_i32_i64(arg1, arg1_r32);
-    tcg_temp_free_i32(arg1_r32);
-}
+DEF_GEN_INSN2_GVEC(pmovmskb, Gd, Nq, sd1_ool, MM_OPRSZ, MM_MAXSZ, pmovmskbd_mmx)
+DEF_GEN_INSN2_GVEC(pmovmskb, Gq, Nq, sq1_ool, MM_OPRSZ, MM_MAXSZ, pmovmskbq_mmx)
+DEF_GEN_INSN2_GVEC(pmovmskb, Gd, Udq, sd1_ool, XMM_OPRSZ, XMM_MAXSZ, pmovmskbd_xmm)
+DEF_GEN_INSN2_GVEC(pmovmskb, Gq, Udq, sq1_ool, XMM_OPRSZ, XMM_MAXSZ, pmovmskbq_xmm)
+DEF_GEN_INSN2_GVEC(vpmovmskb, Gd, Udq, sd1_ool, XMM_OPRSZ, XMM_MAXSZ, pmovmskbd_xmm)
+DEF_GEN_INSN2_GVEC(vpmovmskb, Gq, Udq, sq1_ool, XMM_OPRSZ, XMM_MAXSZ, pmovmskbq_xmm)
+DEF_GEN_INSN2_GVEC(vpmovmskb, Gd, Uqq, sd1_ool, XMM_OPRSZ, XMM_MAXSZ, pmovmskbd_xmm)
+DEF_GEN_INSN2_GVEC(vpmovmskb, Gq, Uqq, sq1_ool, XMM_OPRSZ, XMM_MAXSZ, pmovmskbq_xmm)
 
-DEF_GEN_INSN2_HELPER_DEP(movmskps, movmskps, Gd, Udq)
-GEN_INSN2(movmskps, Gq, Udq)
-{
-    const TCGv_i32 arg1_r32 = tcg_temp_new_i32();
-    gen_insn2(movmskps, Gd, Udq)(env, s, arg1_r32, arg2);
-    tcg_gen_extu_i32_i64(arg1, arg1_r32);
-    tcg_temp_free_i32(arg1_r32);
-}
-DEF_GEN_INSN2_HELPER_DEP(vmovmskps, movmskps, Gd, Udq)
-GEN_INSN2(vmovmskps, Gq, Udq)
-{
-    const TCGv_i32 arg1_r32 = tcg_temp_new_i32();
-    gen_insn2(vmovmskps, Gd, Udq)(env, s, arg1_r32, arg2);
-    tcg_gen_extu_i32_i64(arg1, arg1_r32);
-    tcg_temp_free_i32(arg1_r32);
-}
-DEF_GEN_INSN2_HELPER_DEP(vmovmskps, movmskps, Gd, Uqq)
-GEN_INSN2(vmovmskps, Gq, Uqq)
-{
-    const TCGv_i32 arg1_r32 = tcg_temp_new_i32();
-    gen_insn2(vmovmskps, Gd, Uqq)(env, s, arg1_r32, arg2);
-    tcg_gen_extu_i32_i64(arg1, arg1_r32);
-    tcg_temp_free_i32(arg1_r32);
-}
+DEF_GEN_INSN2_GVEC(movmskps, Gd, Udq, sd1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpsd)
+DEF_GEN_INSN2_GVEC(movmskps, Gq, Udq, sq1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpsq)
+DEF_GEN_INSN2_GVEC(vmovmskps, Gd, Udq, sd1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpsd)
+DEF_GEN_INSN2_GVEC(vmovmskps, Gq, Udq, sq1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpsq)
+DEF_GEN_INSN2_GVEC(vmovmskps, Gd, Uqq, sd1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpsd)
+DEF_GEN_INSN2_GVEC(vmovmskps, Gq, Uqq, sq1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpsq)
 
-DEF_GEN_INSN2_HELPER_DEP(movmskpd, movmskpd, Gd, Udq)
-GEN_INSN2(movmskpd, Gq, Udq)
-{
-    const TCGv_i32 arg1_r32 = tcg_temp_new_i32();
-    gen_insn2(movmskpd, Gd, Udq)(env, s, arg1_r32, arg2);
-    tcg_gen_extu_i32_i64(arg1, arg1_r32);
-    tcg_temp_free_i32(arg1_r32);
-}
-DEF_GEN_INSN2_HELPER_DEP(vmovmskpd, movmskpd, Gd, Udq)
-GEN_INSN2(vmovmskpd, Gq, Udq)
-{
-    const TCGv_i32 arg1_r32 = tcg_temp_new_i32();
-    gen_insn2(vmovmskpd, Gd, Udq)(env, s, arg1_r32, arg2);
-    tcg_gen_extu_i32_i64(arg1, arg1_r32);
-    tcg_temp_free_i32(arg1_r32);
-}
-DEF_GEN_INSN2_HELPER_DEP(vmovmskpd, movmskpd, Gd, Uqq)
-GEN_INSN2(vmovmskpd, Gq, Uqq)
-{
-    const TCGv_i32 arg1_r32 = tcg_temp_new_i32();
-    gen_insn2(vmovmskpd, Gd, Uqq)(env, s, arg1_r32, arg2);
-    tcg_gen_extu_i32_i64(arg1, arg1_r32);
-    tcg_temp_free_i32(arg1_r32);
-}
+DEF_GEN_INSN2_GVEC(movmskpd, Gd, Udq, sd1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpdd)
+DEF_GEN_INSN2_GVEC(movmskpd, Gq, Udq, sq1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpdq)
+DEF_GEN_INSN2_GVEC(vmovmskpd, Gd, Udq, sd1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpdd)
+DEF_GEN_INSN2_GVEC(vmovmskpd, Gq, Udq, sq1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpdq)
+DEF_GEN_INSN2_GVEC(vmovmskpd, Gd, Uqq, sd1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpdd)
+DEF_GEN_INSN2_GVEC(vmovmskpd, Gq, Uqq, sq1_ool, XMM_OPRSZ, XMM_MAXSZ, movmskpdq)
 
 GEN_INSN2(lddqu, Vdq, Mdq)
 {
