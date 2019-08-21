@@ -6695,6 +6695,7 @@ DEF_TRANSLATE_INSN3(Vq, Vq, Wq)
         }                                                               \
     }
 
+DEF_TRANSLATE_INSN4(Pq, Pq, Qq, Ib)
 DEF_TRANSLATE_INSN4(Pq, Pq, RdMw, Ib)
 DEF_TRANSLATE_INSN4(Vd, Vd, Wd, Ib)
 DEF_TRANSLATE_INSN4(Vdq, Vdq, RdMw, Ib)
