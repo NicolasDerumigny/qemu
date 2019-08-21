@@ -2806,7 +2806,6 @@ static const SSEFunc_0_epp sse_op_table1[256][4] = {
     [0xe6] = { NULL, gen_helper_cvttpd2dq, gen_helper_cvtdq2pd, gen_helper_cvtpd2dq },
     [0xe7] = { SSE_SPECIAL , SSE_SPECIAL },  /* movntq, movntq */
     [0xf0] = { NULL, NULL, NULL, SSE_SPECIAL }, /* lddqu */
-    [0xf6] = MMX_OP2(psadbw),
     [0xf7] = { (SSEFunc_0_epp)gen_helper_maskmov_mmx,
                (SSEFunc_0_epp)gen_helper_maskmov_xmm }, /* XXX: casts */
 };
@@ -6256,10 +6255,10 @@ DEF_GEN_INSN3_GVEC(pavgw, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, pavgw_mmx)
 DEF_GEN_INSN3_GVEC(pavgw, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pavgw_xmm)
 DEF_GEN_INSN3_GVEC(vpavgw, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pavgw_xmm)
 DEF_GEN_INSN3_GVEC(vpavgw, Vqq, Hqq, Wqq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pavgw_xmm)
-DEF_GEN_INSN3_HELPER_EPP(psadbw, psadbw_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(psadbw, psadbw_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsadbw, psadbw_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpsadbw, psadbw_xmm, Vqq, Hqq, Wqq)
+DEF_GEN_INSN3_GVEC(psadbw, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, psadbw_mmx)
+DEF_GEN_INSN3_GVEC(psadbw, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psadbw_xmm)
+DEF_GEN_INSN3_GVEC(vpsadbw, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psadbw_xmm)
+DEF_GEN_INSN3_GVEC(vpsadbw, Vqq, Hqq, Wqq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, psadbw_xmm)
 DEF_GEN_INSN4_HELPER_EPPI(mpsadbw, mpsadbw_xmm, Vdq, Vdq, Wdq, Ib)
 DEF_GEN_INSN4_HELPER_EPPI(vmpsadbw, mpsadbw_xmm, Vdq, Hdq, Wdq, Ib)
 DEF_GEN_INSN4_HELPER_EPPI(vmpsadbw, mpsadbw_xmm, Vqq, Hqq, Wqq, Ib)

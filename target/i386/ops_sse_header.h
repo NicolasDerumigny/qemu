@@ -74,7 +74,7 @@ DEF_HELPER_4(glue(pavgw, SUFFIX), void, Reg, Reg, Reg, i32)
 DEF_HELPER_4(glue(pmuludq, SUFFIX), void, Reg, Reg, Reg, i32)
 DEF_HELPER_4(glue(pmaddwd, SUFFIX), void, Reg, Reg, Reg, i32)
 
-DEF_HELPER_3(glue(psadbw, SUFFIX), void, env, Reg, Reg)
+DEF_HELPER_4(glue(psadbw, SUFFIX), void, Reg, Reg, Reg, i32)
 DEF_HELPER_4(glue(maskmov, SUFFIX), void, env, Reg, Reg, tl)
 DEF_HELPER_2(glue(movl_mm_T0, SUFFIX), void, Reg, i32)
 #ifdef TARGET_X86_64

@@ -412,6 +412,15 @@ static inline int satsw(int x)
     }
 }
 
+static inline int abs1(int x)
+{
+    if (x < 0) {
+        return -x;
+    } else {
+        return x;
+    }
+}
+
 #define FMULHRW(a, b) (((int16_t)(a) * (int16_t)(b) + 0x8000) >> 16)
 #endif
 
@@ -510,52 +519,33 @@ void glue(helper_pmaddwd, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
     glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-#if SHIFT == 0
-static inline int abs1(int a)
+void glue(helper_psadbw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
 {
-    if (a < 0) {
-        return -a;
-    } else {
-        return a;
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint64_t) < oprsz; ++i) {
+        const uint64_t t0 = abs1(a->B(8 * i + 0) - b->B(8 * i + 0));
+        const uint64_t t1 = abs1(a->B(8 * i + 1) - b->B(8 * i + 1));
+        const uint64_t t2 = abs1(a->B(8 * i + 2) - b->B(8 * i + 2));
+        const uint64_t t3 = abs1(a->B(8 * i + 3) - b->B(8 * i + 3));
+        const uint64_t t4 = abs1(a->B(8 * i + 4) - b->B(8 * i + 4));
+        const uint64_t t5 = abs1(a->B(8 * i + 5) - b->B(8 * i + 5));
+        const uint64_t t6 = abs1(a->B(8 * i + 6) - b->B(8 * i + 6));
+        const uint64_t t7 = abs1(a->B(8 * i + 7) - b->B(8 * i + 7));
+        d->Q(i) = t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7;
     }
-}
-#endif
-void glue(helper_psadbw, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
-{
-    unsigned int val;
-
-    val = 0;
-    val += abs1(d->B(0) - s->B(0));
-    val += abs1(d->B(1) - s->B(1));
-    val += abs1(d->B(2) - s->B(2));
-    val += abs1(d->B(3) - s->B(3));
-    val += abs1(d->B(4) - s->B(4));
-    val += abs1(d->B(5) - s->B(5));
-    val += abs1(d->B(6) - s->B(6));
-    val += abs1(d->B(7) - s->B(7));
-    d->Q(0) = val;
-#if SHIFT == 1
-    val = 0;
-    val += abs1(d->B(8) - s->B(8));
-    val += abs1(d->B(9) - s->B(9));
-    val += abs1(d->B(10) - s->B(10));
-    val += abs1(d->B(11) - s->B(11));
-    val += abs1(d->B(12) - s->B(12));
-    val += abs1(d->B(13) - s->B(13));
-    val += abs1(d->B(14) - s->B(14));
-    val += abs1(d->B(15) - s->B(15));
-    d->Q(1) = val;
-#endif
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_maskmov, SUFFIX)(CPUX86State *env, Reg *d, Reg *s,
+void glue(helper_maskmov, SUFFIX)(CPUX86State *env, Reg *a, Reg *b,
                                   target_ulong a0)
 {
     int i;
 
     for (i = 0; i < (8 << SHIFT); i++) {
-        if (s->B(i) & 0x80) {
-            cpu_stb_data_ra(env, a0 + i, d->B(i), GETPC());
+        if (b->B(i) & 0x80) {
+            cpu_stb_data_ra(env, a0 + i, a->B(i), GETPC());
         }
     }
 }
