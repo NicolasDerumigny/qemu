@@ -4513,10 +4513,64 @@ static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
     while (1) {
         switch (p | m | w | op) {
 
+#define CASES_0(e)         case (e):
+#define CASES_1(e, A, ...) CASES_ ## A(e, 0, ## __VA_ARGS__)
+#define CASES_2(e, A, ...) CASES_ ## A(e, 1, ## __VA_ARGS__)
+#define CASES_3(e, A, ...) CASES_ ## A(e, 2, ## __VA_ARGS__)
+#define CASES_4(e, A, ...) CASES_ ## A(e, 3, ## __VA_ARGS__)
+#define CASES(e, N, ...)   CASES_ ## N(e, ## __VA_ARGS__)
+
+#define CASES_P(e, N, p, ...) CASES_P ## p(e, N, ## __VA_ARGS__)
+#define CASES_PNP(e, N, ...)  CASES_ ## N(P_NP | e, ## __VA_ARGS__)
+#define CASES_P66(e, N, ...)  CASES_ ## N(P_66 | e, ## __VA_ARGS__)
+#define CASES_PF3(e, N, ...)  CASES_ ## N(P_F3 | e, ## __VA_ARGS__)
+#define CASES_PF2(e, N, ...)  CASES_ ## N(P_F2 | e, ## __VA_ARGS__)
+#define CASES_PIG(e, N, ...)  CASES_PNP(e, N, ## __VA_ARGS__)   \
+                              CASES_P66(e, N, ## __VA_ARGS__)   \
+                              CASES_PF3(e, N, ## __VA_ARGS__)   \
+                              CASES_PF2(e, N, ## __VA_ARGS__)
+
+#define CASES_M(e, N, m, ...) CASES_ ## N(M_ ## m | e, ## __VA_ARGS__)
+
+#define CASES_W(e, N, w, ...) CASES_W ## w(e, N, ## __VA_ARGS__)
+#define CASES_W0(e, N, ...)   CASES_ ## N(W_0 | e, ## __VA_ARGS__)
+#define CASES_W1(e, N, ...)   CASES_ ## N(W_1 | e, ## __VA_ARGS__)
+#define CASES_WIG(e, N, ...)  CASES_W0(e, N, ## __VA_ARGS__)    \
+                              CASES_W1(e, N, ## __VA_ARGS__)
+
+#define CASES_VEX_L(e, N, l, ...) CASES_VEX_L ## l(e, N, ## __VA_ARGS__)
+#define CASES_VEX_L128(e, N, ...) CASES_ ## N(VEX_128 | e, ## __VA_ARGS__)
+#define CASES_VEX_L256(e, N, ...) CASES_ ## N(VEX_256 | e, ## __VA_ARGS__)
+#define CASES_VEX_LZ              CASES_VEX_L128
+#define CASES_VEX_LIG(e, N, ...)  CASES_VEX_L128(e, N, ## __VA_ARGS__)  \
+                                  CASES_VEX_L256(e, N, ## __VA_ARGS__)
+
         default: {
             gen_sse(env, s, b);
         } return;
 
+#undef CASES_0
+#undef CASES_1
+#undef CASES_2
+#undef CASES_3
+#undef CASES_4
+#undef CASES
+#undef CASES_P
+#undef CASES_PNP
+#undef CASES_P66
+#undef CASES_PF3
+#undef CASES_PF2
+#undef CASES_PIG
+#undef CASES_M
+#undef CASES_W
+#undef CASES_W0
+#undef CASES_W1
+#undef CASES_WIG
+#undef CASES_VEX_L
+#undef CASES_VEX_L128
+#undef CASES_VEX_L256
+#undef CASES_VEX_LZ
+#undef CASES_VEX_LIG
         }
     }
 }
