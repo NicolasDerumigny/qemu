@@ -4626,6 +4626,50 @@ static bool check_cpuid(CPUX86State *env, DisasContext *s, CheckCpuidFeat feat)
         insnop_finalize(opT2)(ctxt, env, s, modrm, is_write, arg);      \
     }
 
+/*
+ * Generic unifying either-or operand
+ */
+#define DEF_INSNOP_EITHER(opT, opT1, opT2)                              \
+    typedef insnop_arg_t(opT1) insnop_arg_t(opT);                       \
+    typedef struct {                                                    \
+        bool is_ ## opT1;                                               \
+        union {                                                         \
+            insnop_ctxt_t(opT1) ctxt_ ## opT1;                          \
+            insnop_ctxt_t(opT2) ctxt_ ## opT2;                          \
+        };                                                              \
+    } insnop_ctxt_t(opT);                                               \
+                                                                        \
+    INSNOP_INIT(opT)                                                    \
+    {                                                                   \
+        if (insnop_init(opT1)(&ctxt->ctxt_ ## opT1,                     \
+                              env, s, modrm, is_write)) {               \
+            ctxt->is_ ## opT1 = true;                                   \
+            return true;                                                \
+        }                                                               \
+        if (insnop_init(opT2)(&ctxt->ctxt_ ## opT2,                     \
+                              env, s, modrm, is_write)) {               \
+            ctxt->is_ ## opT1 = false;                                  \
+            return true;                                                \
+        }                                                               \
+        return false;                                                   \
+    }                                                                   \
+    INSNOP_PREPARE(opT)                                                 \
+    {                                                                   \
+        return (ctxt->is_ ## opT1                                       \
+                ? insnop_prepare(opT1)(&ctxt->ctxt_ ## opT1,            \
+                                       env, s, modrm, is_write)         \
+                : insnop_prepare(opT2)(&ctxt->ctxt_ ## opT2,            \
+                                       env, s, modrm, is_write));       \
+    }                                                                   \
+    INSNOP_FINALIZE(opT)                                                \
+    {                                                                   \
+        (ctxt->is_ ## opT1                                              \
+         ? insnop_finalize(opT1)(&ctxt->ctxt_ ## opT1,                  \
+                                 env, s, modrm, is_write, arg)          \
+         : insnop_finalize(opT2)(&ctxt->ctxt_ ## opT2,                  \
+                                 env, s, modrm, is_write, arg));        \
+    }
+
 static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
 {
     enum {
