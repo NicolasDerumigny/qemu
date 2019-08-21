@@ -4477,6 +4477,50 @@ static void gen_sse(CPUX86State *env, DisasContext *s, int b)
     }
 }
 
+static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
+{
+    enum {
+        P_NP = 0,
+        P_66 = 1 << 8,
+        P_F3 = 1 << 9,
+        P_F2 = 1 << 10,
+
+        M_NA   = 0,
+        M_0F   = 1 << 11,
+        M_0F38 = 1 << 12,
+        M_0F3A = 1 << 13,
+
+        W_0 = 0,
+        W_1 = 1 << 14,
+
+        VEX_128 = 1 << 15,
+        VEX_256 = 1 << 16,
+    };
+
+    const int p =
+        (s->prefix & PREFIX_DATA ? P_66 : 0)
+        | (s->prefix & PREFIX_REPZ ? P_F3 : 0)
+        | (s->prefix & PREFIX_REPNZ ? P_F2 : 0)
+        | (!(s->prefix & PREFIX_VEX) ? 0 :
+           (s->vex_l ? VEX_256 : VEX_128));
+    int m =
+        M_0F;
+    const int w =
+        REX_W(s) > 0 ? W_1 : W_0;
+    int op =
+        b & 0xff;
+
+    while (1) {
+        switch (p | m | w | op) {
+
+        default: {
+            gen_sse(env, s, b);
+        } return;
+
+        }
+    }
+}
+
 static int disas_insn_prefix(DisasContext *s, CPUX86State *env)
 {
     int b, prefixes;
@@ -8372,7 +8416,7 @@ static target_ulong disas_insn(DisasContext *s, CPUState *cpu)
     case 0x1c2:
     case 0x1c4 ... 0x1c6:
     case 0x1d0 ... 0x1fe:
-        gen_sse(env, s, b);
+        gen_sse_ng(env, s, b);
         break;
     default:
         goto unknown_op;
