@@ -413,8 +413,6 @@ static inline int satsw(int x)
 }
 
 #define FMULHRW(a, b) (((int16_t)(a) * (int16_t)(b) + 0x8000) >> 16)
-
-#define FAVG(a, b) (((a) + (b) + 1) >> 1)
 #endif
 
 void glue(helper_pmullw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
@@ -457,8 +455,35 @@ void glue(helper_pmulhw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
     glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-SSE_HELPER_B(helper_pavgb, FAVG)
-SSE_HELPER_W(helper_pavgw, FAVG)
+void glue(helper_pavgb, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
+{
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint8_t) < oprsz; ++i) {
+        d->B(i) = (a->B(i) + b->B(i) + 1) >> 1;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
+
+#if SHIFT == 0
+void glue(helper_pavgusb, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+{
+    const uint32_t desc = simd_desc(sizeof(Reg), sizeof(Reg), 0);
+    glue(helper_pavgb, SUFFIX)(d, s, s, desc);
+}
+#endif
+
+void glue(helper_pavgw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
+{
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint16_t) < oprsz; ++i) {
+        d->W(i) = (a->W(i) + b->W(i) + 1) >> 1;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
+}
 
 void glue(helper_pmuludq, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
 {
