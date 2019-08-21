@@ -5032,6 +5032,86 @@ INSNOP_LDST(tcg_i64, Mq)
     }
 }
 
+/*
+ * MMX-technology register operands
+ */
+typedef unsigned int insnop_arg_t(mm);
+typedef struct {} insnop_ctxt_t(mm);
+
+INSNOP_INIT(mm)
+{
+    return true;
+}
+INSNOP_PREPARE(mm)
+{
+    return offsetof(CPUX86State, mmx_t0);
+}
+INSNOP_FINALIZE(mm)
+{
+}
+
+#define DEF_INSNOP_MM(opT, opTmmid)                                     \
+    typedef insnop_arg_t(mm) insnop_arg_t(opT);                         \
+    typedef struct {                                                    \
+        insnop_ctxt_t(opTmmid) mmid;                                    \
+    } insnop_ctxt_t(opT);                                               \
+                                                                        \
+    INSNOP_INIT(opT)                                                    \
+    {                                                                   \
+        return insnop_init(opTmmid)(&ctxt->mmid, env, s, modrm, is_write); \
+    }                                                                   \
+    INSNOP_PREPARE(opT)                                                 \
+    {                                                                   \
+        const insnop_arg_t(opTmmid) mmid =                              \
+            insnop_prepare(opTmmid)(&ctxt->mmid, env, s, modrm, is_write); \
+        const insnop_arg_t(opT) arg =                                   \
+            offsetof(CPUX86State, fpregs[mmid & 7].mmx);                \
+        insnop_finalize(opTmmid)(&ctxt->mmid, env, s, modrm, is_write, mmid); \
+        return arg;                                                     \
+    }                                                                   \
+    INSNOP_FINALIZE(opT)                                                \
+    {                                                                   \
+    }
+
+DEF_INSNOP_MM(P, modrm_reg)
+DEF_INSNOP_ALIAS(Pq, P)
+
+DEF_INSNOP_MM(N, modrm_rm_direct)
+DEF_INSNOP_ALIAS(Nd, N)
+DEF_INSNOP_ALIAS(Nq, N)
+
+DEF_INSNOP_LDST(MQd, mm, Md)
+DEF_INSNOP_LDST(MQq, mm, Mq)
+DEF_INSNOP_EITHER(Qd, Nd, MQd)
+DEF_INSNOP_EITHER(Qq, Nq, MQq)
+
+INSNOP_LDST(mm, Md)
+{
+    const insnop_arg_t(mm) ofs = offsetof(MMXReg, MMX_L(0));
+    const TCGv_i32 r32 = tcg_temp_new_i32();
+    if (is_write) {
+        tcg_gen_ld_i32(r32, cpu_env, arg + ofs);
+        tcg_gen_qemu_st_i32(r32, ptr, s->mem_index, MO_LEUL);
+    } else {
+        tcg_gen_qemu_ld_i32(r32, ptr, s->mem_index, MO_LEUL);
+        tcg_gen_st_i32(r32, cpu_env, arg + ofs);
+    }
+    tcg_temp_free_i32(r32);
+}
+INSNOP_LDST(mm, Mq)
+{
+    const insnop_arg_t(mm) ofs = offsetof(MMXReg, MMX_Q(0));
+    const TCGv_i64 r64 = tcg_temp_new_i64();
+    if (is_write) {
+        tcg_gen_ld_i64(r64, cpu_env, arg + ofs);
+        tcg_gen_qemu_st_i64(r64, ptr, s->mem_index, MO_LEQ);
+    } else {
+        tcg_gen_qemu_ld_i64(r64, ptr, s->mem_index, MO_LEQ);
+        tcg_gen_st_i64(r64, cpu_env, arg + ofs);
+    }
+    tcg_temp_free_i64(r64);
+}
+
 static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
 {
     enum {
