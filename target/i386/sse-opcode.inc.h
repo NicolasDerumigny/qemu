@@ -449,6 +449,26 @@
  * 66 0F 3A 61 /r imm8     PCMPESTRI xmm1, xmm2/m128, imm8
  * 66 0F 3A 62 /r imm8     PCMPISTRM xmm1, xmm2/m128, imm8
  * 66 0F 3A 63 /r imm8     PCMPISTRI xmm1, xmm2/m128, imm8
+ *
+ * AES Instructions
+ * -----------------
+ * 66 0F 38 DE /r                  AESDEC xmm1, xmm2/m128
+ * VEX.128.66.0F38.WIG DE /r       VAESDEC xmm1, xmm2, xmm3/m128
+ * 66 0F 38 DF /r                  AESDECLAST xmm1, xmm2/m128
+ * VEX.128.66.0F38.WIG DF /r       VAESDECLAST xmm1, xmm2, xmm3/m128
+ * 66 0F 38 DC /r                  AESENC xmm1, xmm2/m128
+ * VEX.128.66.0F38.WIG DC /r       VAESENC xmm1, xmm2, xmm3/m128
+ * 66 0F 38 DD /r                  AESENCLAST xmm1, xmm2/m128
+ * VEX.128.66.0F38.WIG DD /r       VAESENCLAST xmm1, xmm2, xmm3/m128
+ * 66 0F 38 DB /r                  AESIMC xmm1, xmm2/m128
+ * VEX.128.66.0F38.WIG DB /r       VAESIMC xmm1, xmm2/m128
+ * 66 0F 3A DF /r ib               AESKEYGENASSIST xmm1, xmm2/m128, imm8
+ * VEX.128.66.0F3A.WIG DF /r ib    VAESKEYGENASSIST xmm1, xmm2/m128, imm8
+ *
+ * PCLMULQDQ Instructions
+ * -----------------------
+ * 66 0F 3A 44 /r ib               PCLMULQDQ xmm1, xmm2/m128, imm8
+ * VEX.128.66.0F3A.WIG 44 /r ib    VPCLMULQDQ xmm1, xmm2, xmm3/m128, imm8
  */
 
 OPCODE(movd, LEG(NP, 0F, 0, 0x6e), MMX, WR, Pq, Ed)
@@ -641,6 +661,20 @@ OPCODE(roundps, LEG(66, 0F3A, 0, 0x08), SSE4_1, WRR, Vdq, Wdq, Ib)
 OPCODE(roundpd, LEG(66, 0F3A, 0, 0x09), SSE4_1, WRR, Vdq, Wdq, Ib)
 OPCODE(roundss, LEG(66, 0F3A, 0, 0x0a), SSE4_1, WRR, Vd, Wd, Ib)
 OPCODE(roundsd, LEG(66, 0F3A, 0, 0x0b), SSE4_1, WRR, Vq, Wq, Ib)
+OPCODE(aesdec, LEG(66, 0F38, 0, 0xde), AES, WRR, Vdq, Vdq, Wdq)
+OPCODE(vaesdec, VEX(128, 66, 0F38, IG, 0xde), AES_AVX, WRR, Vdq, Hdq, Wdq)
+OPCODE(aesdeclast, LEG(66, 0F38, 0, 0xdf), AES, WRR, Vdq, Vdq, Wdq)
+OPCODE(vaesdeclast, VEX(128, 66, 0F38, IG, 0xdf), AES_AVX, WRR, Vdq, Hdq, Wdq)
+OPCODE(aesenc, LEG(66, 0F38, 0, 0xdc), AES, WRR, Vdq, Vdq, Wdq)
+OPCODE(vaesenc, VEX(128, 66, 0F38, IG, 0xdc), AES_AVX, WRR, Vdq, Hdq, Wdq)
+OPCODE(aesenclast, LEG(66, 0F38, 0, 0xdd), AES, WRR, Vdq, Vdq, Wdq)
+OPCODE(vaesenclast, VEX(128, 66, 0F38, IG, 0xdd), AES_AVX, WRR, Vdq, Hdq, Wdq)
+OPCODE(aesimc, LEG(66, 0F38, 0, 0xdb), AES, WR, Vdq, Wdq)
+OPCODE(vaesimc, VEX(128, 66, 0F38, IG, 0xdb), AES_AVX, WR, Vdq, Wdq)
+OPCODE(aeskeygenassist, LEG(66, 0F3A, 0, 0xdf), AES, WRR, Vdq, Wdq, Ib)
+OPCODE(vaeskeygenassist, VEX(128, 66, 0F3A, IG, 0xdf), AES_AVX, WRR, Vdq, Wdq, Ib)
+OPCODE(pclmulqdq, LEG(66, 0F3A, 0, 0x44), PCLMULQDQ, WRRR, Vdq, Vdq, Wdq, Ib)
+OPCODE(vpclmulqdq, VEX(128, 66, 0F3A, IG, 0x44), PCLMULQDQ_AVX, WRRR, Vdq, Hdq, Wdq, Ib)
 OPCODE(pcmpeqb, LEG(NP, 0F, 0, 0x74), MMX, WRR, Pq, Pq, Qq)
 OPCODE(pcmpeqb, LEG(66, 0F, 0, 0x74), SSE2, WRR, Vdq, Vdq, Wdq)
 OPCODE(pcmpeqw, LEG(NP, 0F, 0, 0x75), MMX, WRR, Pq, Pq, Qq)
