@@ -24,6 +24,7 @@
 #include "exec/exec-all.h"
 #include "tcg-gvec-desc.h"
 #include "tcg-op.h"
+#include "tcg-op-gvec.h"
 #include "exec/cpu_ldst.h"
 #include "exec/translator.h"
 
@@ -5535,6 +5536,30 @@ INSNOP_LDST(xmm, Mhq)
         tcg_temp_free_ptr(arg1_ptr);                                    \
         tcg_temp_free_ptr(arg3_ptr);                                    \
         tcg_temp_free_i32(arg4_r32);                                    \
+    }
+
+#define MM_OPRSZ sizeof(MMXReg)
+#define MM_MAXSZ sizeof(MMXReg)
+#define XMM_OPRSZ (!(s->prefix & PREFIX_VEX) ? sizeof(XMMReg) : \
+                   s->vex_l ? sizeof(XMMReg) :                  \
+                   sizeof(XMMReg))
+#define XMM_MAXSZ (!(s->prefix & PREFIX_VEX) ? sizeof(XMMReg) : \
+                   sizeof(YMMReg))
+
+#define DEF_GEN_INSN2_GVEC(mnem, opT1, opT2, gvec, ...) \
+    GEN_INSN2(mnem, opT1, opT2)                         \
+    {                                                   \
+        gen_gvec_ ## gvec(arg1, arg2, ## __VA_ARGS__);  \
+    }
+#define DEF_GEN_INSN3_GVEC(mnem, opT1, opT2, opT3, gvec, ...)   \
+    GEN_INSN3(mnem, opT1, opT2, opT3)                           \
+    {                                                           \
+        gen_gvec_ ## gvec(arg1, arg2, arg3, ## __VA_ARGS__);    \
+    }
+#define DEF_GEN_INSN4_GVEC(mnem, opT1, opT2, opT3, opT4, gvec, ...)     \
+    GEN_INSN4(mnem, opT1, opT2, opT3, opT4)                             \
+    {                                                                   \
+        gen_gvec_ ## gvec(arg1, arg2, arg3, arg4, ## __VA_ARGS__);      \
     }
 
 static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
