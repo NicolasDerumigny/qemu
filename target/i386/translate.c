@@ -4944,6 +4944,94 @@ DEF_INSNOP_ALIAS(Mq, M)
 DEF_INSNOP_ALIAS(Mdq, M)
 DEF_INSNOP_ALIAS(Mqq, M)
 
+/*
+ * 32-bit general register operands
+ */
+DEF_INSNOP_LDST(Gd, tcg_i32, modrm_reg)
+DEF_INSNOP_LDST(Rd, tcg_i32, modrm_rm_direct)
+
+INSNOP_LDST(tcg_i32, modrm_reg)
+{
+    assert(0 <= ptr && ptr < CPU_NB_REGS);
+    if (is_write) {
+        tcg_gen_extu_i32_tl(cpu_regs[ptr], arg);
+    } else {
+        tcg_gen_trunc_tl_i32(arg, cpu_regs[ptr]);
+    }
+}
+INSNOP_LDST(tcg_i32, modrm_rm_direct)
+{
+    insnop_ldst(tcg_i32, modrm_reg)(env, s, is_write, arg, ptr);
+}
+
+DEF_INSNOP_LDST(MEd, tcg_i32, Md)
+DEF_INSNOP_EITHER(Ed, Rd, MEd)
+DEF_INSNOP_LDST(MRdMw, tcg_i32, Mw)
+DEF_INSNOP_EITHER(RdMw, Rd, MRdMw)
+DEF_INSNOP_LDST(MRdMb, tcg_i32, Mb)
+DEF_INSNOP_EITHER(RdMb, Rd, MRdMb)
+
+INSNOP_LDST(tcg_i32, Md)
+{
+    if (is_write) {
+        tcg_gen_qemu_st_i32(arg, ptr, s->mem_index, MO_LEUL);
+    } else {
+        tcg_gen_qemu_ld_i32(arg, ptr, s->mem_index, MO_LEUL);
+    }
+}
+INSNOP_LDST(tcg_i32, Mw)
+{
+    if (is_write) {
+        tcg_gen_qemu_st_i32(arg, ptr, s->mem_index, MO_LEUW);
+    } else {
+        tcg_gen_qemu_ld_i32(arg, ptr, s->mem_index, MO_LEUW);
+    }
+}
+INSNOP_LDST(tcg_i32, Mb)
+{
+    if (is_write) {
+        tcg_gen_qemu_st_i32(arg, ptr, s->mem_index, MO_UB);
+    } else {
+        tcg_gen_qemu_ld_i32(arg, ptr, s->mem_index, MO_UB);
+    }
+}
+
+/*
+ * 64-bit general register operands
+ */
+DEF_INSNOP_LDST(Gq, tcg_i64, modrm_reg)
+DEF_INSNOP_LDST(Rq, tcg_i64, modrm_rm_direct)
+
+INSNOP_LDST(tcg_i64, modrm_reg)
+{
+#ifdef TARGET_X86_64
+    assert(0 <= ptr && ptr < CPU_NB_REGS);
+    if (is_write) {
+        tcg_gen_mov_i64(cpu_regs[ptr], arg);
+    } else {
+        tcg_gen_mov_i64(arg, cpu_regs[ptr]);
+    }
+#else /* !TARGET_X86_64 */
+    g_assert_not_reached();
+#endif /* !TARGET_X86_64 */
+}
+INSNOP_LDST(tcg_i64, modrm_rm_direct)
+{
+    insnop_ldst(tcg_i64, modrm_reg)(env, s, is_write, arg, ptr);
+}
+
+DEF_INSNOP_LDST(MEq, tcg_i64, Mq)
+DEF_INSNOP_EITHER(Eq, Rq, MEq)
+
+INSNOP_LDST(tcg_i64, Mq)
+{
+    if (is_write) {
+        tcg_gen_qemu_st_i64(arg, ptr, s->mem_index, MO_LEQ);
+    } else {
+        tcg_gen_qemu_ld_i64(arg, ptr, s->mem_index, MO_LEQ);
+    }
+}
+
 static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
 {
     enum {
