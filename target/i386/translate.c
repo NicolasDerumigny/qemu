@@ -2763,8 +2763,6 @@ static const SSEFunc_0_epp sse_op_table1[256][4] = {
     [0x5b] = { gen_helper_cvtdq2ps, gen_helper_cvtps2dq, gen_helper_cvttps2dq },
 
     [0xc2] = SSE_FOP(cmpeq),
-    [0xc6] = { (SSEFunc_0_epp)gen_helper_shufps,
-               (SSEFunc_0_epp)gen_helper_shufpd }, /* XXX: casts */
 
     /* SSSE3, SSE4, MOVBE, CRC32, BMI1, BMI2, ADX.  */
     [0x38] = { SSE_SPECIAL, SSE_SPECIAL, SSE_SPECIAL, SSE_SPECIAL },
@@ -6971,22 +6969,22 @@ DEF_GEN_INSN3_HELPER_EPP(pshufb, pshufb_mmx, Pq, Pq, Qq)
 DEF_GEN_INSN3_HELPER_EPP(pshufb, pshufb_xmm, Vdq, Vdq, Wdq)
 DEF_GEN_INSN3_HELPER_EPP(vpshufb, pshufb_xmm, Vdq, Hdq, Wdq)
 DEF_GEN_INSN3_HELPER_EPP(vpshufb, pshufb_xmm, Vqq, Hqq, Wqq)
-DEF_GEN_INSN3_HELPER_PPI(pshufw, pshufw_mmx, Pq, Qq, Ib)
-DEF_GEN_INSN3_HELPER_PPI(pshuflw, pshuflw_xmm, Vdq, Wdq, Ib)
-DEF_GEN_INSN3_HELPER_PPI(vpshuflw, pshuflw_xmm, Vdq, Wdq, Ib)
-DEF_GEN_INSN3_HELPER_PPI(vpshuflw, pshuflw_xmm, Vqq, Wqq, Ib)
-DEF_GEN_INSN3_HELPER_PPI(pshufhw, pshufhw_xmm, Vdq, Wdq, Ib)
-DEF_GEN_INSN3_HELPER_PPI(vpshufhw, pshufhw_xmm, Vdq, Wdq, Ib)
-DEF_GEN_INSN3_HELPER_PPI(vpshufhw, pshufhw_xmm, Vqq, Wqq, Ib)
-DEF_GEN_INSN3_HELPER_PPI(pshufd, pshufd_xmm, Vdq, Wdq, Ib)
-DEF_GEN_INSN3_HELPER_PPI(vpshufd, pshufd_xmm, Vdq, Wdq, Ib)
-DEF_GEN_INSN3_HELPER_PPI(vpshufd, pshufd_xmm, Vqq, Wqq, Ib)
-DEF_GEN_INSN4_HELPER_PPI(shufps, shufps, Vdq, Vdq, Wdq, Ib)
-DEF_GEN_INSN4_HELPER_PPI(vshufps, shufps, Vdq, Hdq, Wdq, Ib)
-DEF_GEN_INSN4_HELPER_PPI(vshufps, shufps, Vqq, Hqq, Wqq, Ib)
-DEF_GEN_INSN4_HELPER_PPI(shufpd, shufpd, Vdq, Vdq, Wdq, Ib)
-DEF_GEN_INSN4_HELPER_PPI(vshufpd, shufpd, Vdq, Hdq, Wdq, Ib)
-DEF_GEN_INSN4_HELPER_PPI(vshufpd, shufpd, Vqq, Hqq, Wqq, Ib)
+DEF_GEN_INSN3_GVEC(pshufw, Pq, Qq, Ib, 2i_ool, MM_OPRSZ, MM_MAXSZ, pshufw_mmx)
+DEF_GEN_INSN3_GVEC(pshuflw, Vdq, Wdq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pshuflw_xmm)
+DEF_GEN_INSN3_GVEC(vpshuflw, Vdq, Wdq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pshuflw_xmm)
+DEF_GEN_INSN3_GVEC(vpshuflw, Vqq, Wqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pshuflw_xmm)
+DEF_GEN_INSN3_GVEC(pshufhw, Vdq, Wdq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pshufhw_xmm)
+DEF_GEN_INSN3_GVEC(vpshufhw, Vdq, Wdq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pshufhw_xmm)
+DEF_GEN_INSN3_GVEC(vpshufhw, Vqq, Wqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pshufhw_xmm)
+DEF_GEN_INSN3_GVEC(pshufd, Vdq, Wdq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pshufd_xmm)
+DEF_GEN_INSN3_GVEC(vpshufd, Vdq, Wdq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pshufd_xmm)
+DEF_GEN_INSN3_GVEC(vpshufd, Vqq, Wqq, Ib, 2i_ool, XMM_OPRSZ, XMM_MAXSZ, pshufd_xmm)
+DEF_GEN_INSN4_GVEC(shufps, Vdq, Vdq, Wdq, Ib, 3i_ool, XMM_OPRSZ, XMM_MAXSZ, shufps_xmm)
+DEF_GEN_INSN4_GVEC(vshufps, Vdq, Hdq, Wdq, Ib, 3i_ool, XMM_OPRSZ, XMM_MAXSZ, shufps_xmm)
+DEF_GEN_INSN4_GVEC(vshufps, Vqq, Hqq, Wqq, Ib, 3i_ool, XMM_OPRSZ, XMM_MAXSZ, shufps_xmm)
+DEF_GEN_INSN4_GVEC(shufpd, Vdq, Vdq, Wdq, Ib, 3i_ool, XMM_OPRSZ, XMM_MAXSZ, shufpd_xmm)
+DEF_GEN_INSN4_GVEC(vshufpd, Vdq, Hdq, Wdq, Ib, 3i_ool, XMM_OPRSZ, XMM_MAXSZ, shufpd_xmm)
+DEF_GEN_INSN4_GVEC(vshufpd, Vqq, Hqq, Wqq, Ib, 3i_ool, XMM_OPRSZ, XMM_MAXSZ, shufpd_xmm)
 
 DEF_GEN_INSN4_HELPER_EPPI(blendps, blendps_xmm, Vdq, Vdq, Wdq, Ib)
 DEF_GEN_INSN4_HELPER_EPPI(vblendps, blendps_xmm, Vdq, Hdq, Wdq, Ib)

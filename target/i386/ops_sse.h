@@ -551,70 +551,123 @@ void glue(helper_maskmov, SUFFIX)(CPUX86State *env, Reg *a, Reg *b,
 }
 
 #if SHIFT == 0
-void glue(helper_pshufw, SUFFIX)(Reg *d, Reg *s, int order)
+void glue(helper_pshufw, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
 {
-    Reg r;
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+    const uint8_t ctrl = simd_data(desc);
 
-    r.W(0) = s->W(order & 3);
-    r.W(1) = s->W((order >> 2) & 3);
-    r.W(2) = s->W((order >> 4) & 3);
-    r.W(3) = s->W((order >> 6) & 3);
-    *d = r;
+    for (intptr_t i = 0; 4 * i * sizeof(uint16_t) < oprsz; ++i) {
+        const uint16_t t0 = a->W(4 * i + ((ctrl >> 0) & 3));
+        const uint16_t t1 = a->W(4 * i + ((ctrl >> 2) & 3));
+        const uint16_t t2 = a->W(4 * i + ((ctrl >> 4) & 3));
+        const uint16_t t3 = a->W(4 * i + ((ctrl >> 6) & 3));
+
+        d->W(4 * i + 0) = t0;
+        d->W(4 * i + 1) = t1;
+        d->W(4 * i + 2) = t2;
+        d->W(4 * i + 3) = t3;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 #else
-void helper_shufps(Reg *d, Reg *s, int order)
+void glue(helper_pshuflw, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
 {
-    Reg r;
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+    const uint8_t ctrl = simd_data(desc);
 
-    r.L(0) = d->L(order & 3);
-    r.L(1) = d->L((order >> 2) & 3);
-    r.L(2) = s->L((order >> 4) & 3);
-    r.L(3) = s->L((order >> 6) & 3);
-    *d = r;
+    for (intptr_t i = 0; 8 * i * sizeof(uint16_t) < oprsz; ++i) {
+        const uint16_t t0 = a->W(8 * i + ((ctrl >> 0) & 3));
+        const uint16_t t1 = a->W(8 * i + ((ctrl >> 2) & 3));
+        const uint16_t t2 = a->W(8 * i + ((ctrl >> 4) & 3));
+        const uint16_t t3 = a->W(8 * i + ((ctrl >> 6) & 3));
+
+        d->W(8 * i + 0) = t0;
+        d->W(8 * i + 1) = t1;
+        d->W(8 * i + 2) = t2;
+        d->W(8 * i + 3) = t3;
+        d->Q(2 * i + 1) = a->Q(2 * i + 1);
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void helper_shufpd(Reg *d, Reg *s, int order)
+void glue(helper_pshufhw, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
 {
-    Reg r;
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+    const uint8_t ctrl = simd_data(desc);
 
-    r.Q(0) = d->Q(order & 1);
-    r.Q(1) = s->Q((order >> 1) & 1);
-    *d = r;
+    for (intptr_t i = 0; 8 * i * sizeof(uint16_t) < oprsz; ++i) {
+        const uint16_t t0 = a->W(8 * i + 4 + ((ctrl >> 0) & 3));
+        const uint16_t t1 = a->W(8 * i + 4 + ((ctrl >> 2) & 3));
+        const uint16_t t2 = a->W(8 * i + 4 + ((ctrl >> 4) & 3));
+        const uint16_t t3 = a->W(8 * i + 4 + ((ctrl >> 6) & 3));
+
+        d->Q(2 * i + 0) = a->Q(2 * i + 0);
+        d->W(8 * i + 4) = t0;
+        d->W(8 * i + 5) = t1;
+        d->W(8 * i + 6) = t2;
+        d->W(8 * i + 7) = t3;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_pshufd, SUFFIX)(Reg *d, Reg *s, int order)
+void glue(helper_pshufd, SUFFIX)(Reg *d, Reg *a, uint32_t desc)
 {
-    Reg r;
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+    const uint8_t ctrl = simd_data(desc);
 
-    r.L(0) = s->L(order & 3);
-    r.L(1) = s->L((order >> 2) & 3);
-    r.L(2) = s->L((order >> 4) & 3);
-    r.L(3) = s->L((order >> 6) & 3);
-    *d = r;
+    for (intptr_t i = 0; 4 * i * sizeof(uint32_t) < oprsz; ++i) {
+        const uint32_t t0 = a->L(4 * i + ((ctrl >> 0) & 3));
+        const uint32_t t1 = a->L(4 * i + ((ctrl >> 2) & 3));
+        const uint32_t t2 = a->L(4 * i + ((ctrl >> 4) & 3));
+        const uint32_t t3 = a->L(4 * i + ((ctrl >> 6) & 3));
+
+        d->L(4 * i + 0) = t0;
+        d->L(4 * i + 1) = t1;
+        d->L(4 * i + 2) = t2;
+        d->L(4 * i + 3) = t3;
+
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_pshuflw, SUFFIX)(Reg *d, Reg *s, int order)
+void glue(helper_shufps, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
 {
-    Reg r;
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+    const uint8_t ctrl = simd_data(desc);
 
-    r.W(0) = s->W(order & 3);
-    r.W(1) = s->W((order >> 2) & 3);
-    r.W(2) = s->W((order >> 4) & 3);
-    r.W(3) = s->W((order >> 6) & 3);
-    r.Q(1) = s->Q(1);
-    *d = r;
+    for (intptr_t i = 0; 4 * i * sizeof(uint32_t) < oprsz; ++i) {
+        const uint32_t t0 = a->L(4 * i + ((ctrl >> 0) & 3));
+        const uint32_t t1 = a->L(4 * i + ((ctrl >> 2) & 3));
+        const uint32_t t2 = b->L(4 * i + ((ctrl >> 4) & 3));
+        const uint32_t t3 = b->L(4 * i + ((ctrl >> 6) & 3));
+
+        d->W(4 * i + 0) = t0;
+        d->W(4 * i + 1) = t1;
+        d->W(4 * i + 2) = t2;
+        d->W(4 * i + 3) = t3;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_pshufhw, SUFFIX)(Reg *d, Reg *s, int order)
+void glue(helper_shufpd, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
 {
-    Reg r;
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+    const uint8_t ctrl = simd_data(desc);
 
-    r.Q(0) = s->Q(0);
-    r.W(4) = s->W(4 + (order & 3));
-    r.W(5) = s->W(4 + ((order >> 2) & 3));
-    r.W(6) = s->W(4 + ((order >> 4) & 3));
-    r.W(7) = s->W(4 + ((order >> 6) & 3));
-    *d = r;
+    for (intptr_t i = 0; 2 * i * sizeof(uint64_t) < oprsz; ++i) {
+        const uint64_t t0 = a->Q(2 * i + ((ctrl >> 0) & 1));
+        const uint64_t t1 = b->Q(2 * i + ((ctrl >> 1) & 1));
+
+        d->Q(2 * i + 0) = t0;
+        d->Q(2 * i + 1) = t1;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 #endif
 

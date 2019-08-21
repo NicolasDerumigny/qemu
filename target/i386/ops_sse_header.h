@@ -78,13 +78,13 @@ DEF_HELPER_4(glue(psadbw, SUFFIX), void, Reg, Reg, Reg, i32)
 DEF_HELPER_4(glue(maskmov, SUFFIX), void, env, Reg, Reg, tl)
 
 #if SHIFT == 0
-DEF_HELPER_3(glue(pshufw, SUFFIX), void, Reg, Reg, int)
+DEF_HELPER_3(glue(pshufw, SUFFIX), void, Reg, Reg, i32)
 #else
-DEF_HELPER_3(shufps, void, Reg, Reg, int)
-DEF_HELPER_3(shufpd, void, Reg, Reg, int)
-DEF_HELPER_3(glue(pshufd, SUFFIX), void, Reg, Reg, int)
-DEF_HELPER_3(glue(pshuflw, SUFFIX), void, Reg, Reg, int)
-DEF_HELPER_3(glue(pshufhw, SUFFIX), void, Reg, Reg, int)
+DEF_HELPER_3(glue(pshuflw, SUFFIX), void, Reg, Reg, i32)
+DEF_HELPER_3(glue(pshufhw, SUFFIX), void, Reg, Reg, i32)
+DEF_HELPER_3(glue(pshufd, SUFFIX), void, Reg, Reg, i32)
+DEF_HELPER_4(glue(shufps, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_4(glue(shufpd, SUFFIX), void, Reg, Reg, Reg, i32)
 #endif
 
 #if SHIFT == 1
