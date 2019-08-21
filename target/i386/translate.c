@@ -4890,6 +4890,24 @@ INSNOP_FINALIZE(modrm_rm_direct)
     insnop_finalize(modrm_rm)(&ctxt->rm, env, s, modrm, is_write, arg);
 }
 
+/*
+ * Immediate operand
+ */
+typedef uint8_t insnop_arg_t(Ib);
+typedef struct {} insnop_ctxt_t(Ib);
+
+INSNOP_INIT(Ib)
+{
+    return true;
+}
+INSNOP_PREPARE(Ib)
+{
+    return x86_ldub_code(env, s);
+}
+INSNOP_FINALIZE(Ib)
+{
+}
+
 static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
 {
     enum {
