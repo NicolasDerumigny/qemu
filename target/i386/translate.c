@@ -4545,7 +4545,23 @@ static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
 #define CASES_VEX_LIG(e, N, ...)  CASES_VEX_L128(e, N, ## __VA_ARGS__)  \
                                   CASES_VEX_L256(e, N, ## __VA_ARGS__)
 
+        CASES(0x38, 3, W, IG, M, 0F, P, IG)
+        CASES(0x38, 4, W, IG, M, 0F, P, IG, VEX_L, IG) {
+            m = M_0F38;
+            op = x86_ldub_code(env, s);
+        } break;
+
+        CASES(0x3a, 3, W, IG, M, 0F, P, IG)
+        CASES(0x3a, 4, W, IG, M, 0F, P, IG, VEX_L, IG) {
+            m = M_0F3A;
+            op = x86_ldub_code(env, s);
+        } break;
+
         default: {
+            if (m == M_0F38 || m == M_0F3A) {
+                /* rewind the advance_pc() x86_ldub_code() did */
+                advance_pc(env, s, -1);
+            }
             gen_sse(env, s, b);
         } return;
 
