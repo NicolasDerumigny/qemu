@@ -4727,6 +4727,50 @@ static bool check_cpuid(CPUX86State *env, DisasContext *s, CheckCpuidFeat feat)
                                 env, s, modrm, is_write, arg);          \
     }
 
+/*
+ * tcg_i32
+ *
+ * Operand which allocates a 32-bit TCG temporary and frees it
+ * automatically after use.
+ */
+typedef TCGv_i32 insnop_arg_t(tcg_i32);
+typedef struct {} insnop_ctxt_t(tcg_i32);
+
+INSNOP_INIT(tcg_i32)
+{
+    return true;
+}
+INSNOP_PREPARE(tcg_i32)
+{
+    return tcg_temp_new_i32();
+}
+INSNOP_FINALIZE(tcg_i32)
+{
+    tcg_temp_free_i32(arg);
+}
+
+/*
+ * tcg_i64
+ *
+ * Operand which allocates a 64-bit TCG temporary and frees it
+ * automatically after use.
+ */
+typedef TCGv_i64 insnop_arg_t(tcg_i64);
+typedef struct {} insnop_ctxt_t(tcg_i64);
+
+INSNOP_INIT(tcg_i64)
+{
+    return true;
+}
+INSNOP_PREPARE(tcg_i64)
+{
+    return tcg_temp_new_i64();
+}
+INSNOP_FINALIZE(tcg_i64)
+{
+    tcg_temp_free_i64(arg);
+}
+
 static void gen_sse_ng(CPUX86State *env, DisasContext *s, int b)
 {
     enum {
