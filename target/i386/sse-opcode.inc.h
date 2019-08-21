@@ -441,6 +441,14 @@
  * 66 0f 38 34 /r          PMOVZXWQ xmm1, xmm2/m32
  * 66 0f 38 35 /r          PMOVZXDQ xmm1, xmm2/m64
  * 66 0F 38 2A /r          MOVNTDQA xmm1, m128
+ *
+ * SSE4.2 Instructions
+ * --------------------
+ * 66 0F 38 37 /r          PCMPGTQ xmm1,xmm2/m128
+ * 66 0F 3A 60 /r imm8     PCMPESTRM xmm1, xmm2/m128, imm8
+ * 66 0F 3A 61 /r imm8     PCMPESTRI xmm1, xmm2/m128, imm8
+ * 66 0F 3A 62 /r imm8     PCMPISTRM xmm1, xmm2/m128, imm8
+ * 66 0F 3A 63 /r imm8     PCMPISTRI xmm1, xmm2/m128, imm8
  */
 
 OPCODE(movd, LEG(NP, 0F, 0, 0x6e), MMX, WR, Pq, Ed)
@@ -646,6 +654,11 @@ OPCODE(pcmpgtw, LEG(NP, 0F, 0, 0x65), MMX, WRR, Pq, Pq, Qq)
 OPCODE(pcmpgtw, LEG(66, 0F, 0, 0x65), SSE2, WRR, Vdq, Vdq, Wdq)
 OPCODE(pcmpgtd, LEG(NP, 0F, 0, 0x66), MMX, WRR, Pq, Pq, Qq)
 OPCODE(pcmpgtd, LEG(66, 0F, 0, 0x66), SSE2, WRR, Vdq, Vdq, Wdq)
+OPCODE(pcmpgtq, LEG(66, 0F38, 0, 0x37), SSE4_2, WRR, Vdq, Vdq, Wdq)
+OPCODE(pcmpestrm, LEG(66, 0F3A, 0, 0x60), SSE4_2, RRR, Vdq, Wdq, Ib)
+OPCODE(pcmpestri, LEG(66, 0F3A, 0, 0x61), SSE4_2, RRR, Vdq, Wdq, Ib)
+OPCODE(pcmpistrm, LEG(66, 0F3A, 0, 0x62), SSE4_2, RRR, Vdq, Wdq, Ib)
+OPCODE(pcmpistri, LEG(66, 0F3A, 0, 0x63), SSE4_2, RRR, Vdq, Wdq, Ib)
 OPCODE(ptest, LEG(66, 0F38, 0, 0x17), SSE4_1, RR, Vdq, Wdq)
 OPCODE(cmpps, LEG(NP, 0F, 0, 0xc2), SSE, WRRR, Vdq, Vdq, Wdq, Ib)
 OPCODE(cmppd, LEG(66, 0F, 0, 0xc2), SSE2, WRRR, Vdq, Vdq, Wdq, Ib)
