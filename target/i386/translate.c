@@ -2806,8 +2806,6 @@ static const SSEFunc_0_epp sse_op_table1[256][4] = {
     [0xe6] = { NULL, gen_helper_cvttpd2dq, gen_helper_cvtdq2pd, gen_helper_cvtpd2dq },
     [0xe7] = { SSE_SPECIAL , SSE_SPECIAL },  /* movntq, movntq */
     [0xf0] = { NULL, NULL, NULL, SSE_SPECIAL }, /* lddqu */
-    [0xf4] = MMX_OP2(pmuludq),
-    [0xf5] = MMX_OP2(pmaddwd),
     [0xf6] = MMX_OP2(psadbw),
     [0xf7] = { (SSEFunc_0_epp)gen_helper_maskmov_mmx,
                (SSEFunc_0_epp)gen_helper_maskmov_xmm }, /* XXX: casts */
@@ -6129,10 +6127,10 @@ DEF_GEN_INSN3_GVEC(vpmulhuw, Vqq, Hqq, Wqq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pmulhuw
 DEF_GEN_INSN3_HELPER_EPP(pmuldq, pmuldq_xmm, Vdq, Vdq, Wdq)
 DEF_GEN_INSN3_HELPER_EPP(vpmuldq, pmuldq_xmm, Vdq, Hdq, Wdq)
 DEF_GEN_INSN3_HELPER_EPP(vpmuldq, pmuldq_xmm, Vqq, Hqq, Wqq)
-DEF_GEN_INSN3_HELPER_EPP(pmuludq, pmuludq_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(pmuludq, pmuludq_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpmuludq, pmuludq_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpmuludq, pmuludq_xmm, Vqq, Hqq, Wqq)
+DEF_GEN_INSN3_GVEC(pmuludq, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, pmuludq_mmx)
+DEF_GEN_INSN3_GVEC(pmuludq, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pmuludq_xmm)
+DEF_GEN_INSN3_GVEC(vpmuludq, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pmuludq_xmm)
+DEF_GEN_INSN3_GVEC(vpmuludq, Vqq, Hqq, Wqq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pmuludq_xmm)
 DEF_GEN_INSN3_HELPER_EPP(pmulhrsw, pmulhrsw_mmx, Pq, Pq, Qq)
 DEF_GEN_INSN3_HELPER_EPP(pmulhrsw, pmulhrsw_xmm, Vdq, Vdq, Wdq)
 DEF_GEN_INSN3_HELPER_EPP(vpmulhrsw, pmulhrsw_xmm, Vdq, Hdq, Wdq)
@@ -6147,10 +6145,10 @@ DEF_GEN_INSN3_HELPER_EPP(mulss, mulss, Vd, Vd, Wd)
 DEF_GEN_INSN3_HELPER_EPP(vmulss, mulss, Vd, Hd, Wd)
 DEF_GEN_INSN3_HELPER_EPP(mulsd, mulsd, Vq, Vq, Wq)
 DEF_GEN_INSN3_HELPER_EPP(vmulsd, mulsd, Vq, Hq, Wq)
-DEF_GEN_INSN3_HELPER_EPP(pmaddwd, pmaddwd_mmx, Pq, Pq, Qq)
-DEF_GEN_INSN3_HELPER_EPP(pmaddwd, pmaddwd_xmm, Vdq, Vdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpmaddwd, pmaddwd_xmm, Vdq, Hdq, Wdq)
-DEF_GEN_INSN3_HELPER_EPP(vpmaddwd, pmaddwd_xmm, Vqq, Hqq, Wqq)
+DEF_GEN_INSN3_GVEC(pmaddwd, Pq, Pq, Qq, 3_ool, MM_OPRSZ, MM_MAXSZ, pmaddwd_mmx)
+DEF_GEN_INSN3_GVEC(pmaddwd, Vdq, Vdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pmaddwd_xmm)
+DEF_GEN_INSN3_GVEC(vpmaddwd, Vdq, Hdq, Wdq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pmaddwd_xmm)
+DEF_GEN_INSN3_GVEC(vpmaddwd, Vqq, Hqq, Wqq, 3_ool, XMM_OPRSZ, XMM_MAXSZ, pmaddwd_xmm)
 DEF_GEN_INSN3_HELPER_EPP(pmaddubsw, pmaddubsw_mmx, Pq, Pq, Qq)
 DEF_GEN_INSN3_HELPER_EPP(pmaddubsw, pmaddubsw_xmm, Vdq, Vdq, Wdq)
 DEF_GEN_INSN3_HELPER_EPP(vpmaddubsw, pmaddubsw_xmm, Vdq, Hdq, Wdq)

@@ -485,22 +485,29 @@ void glue(helper_pavgw, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
     glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_pmuludq, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_pmuludq, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
 {
-    d->Q(0) = (uint64_t)s->L(0) * (uint64_t)d->L(0);
-#if SHIFT == 1
-    d->Q(1) = (uint64_t)s->L(2) * (uint64_t)d->L(2);
-#endif
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
+
+    for (intptr_t i = 0; i * sizeof(uint64_t) < oprsz; ++i) {
+        const uint64_t t = (uint64_t)a->L(2 * i) * (uint64_t)b->L(2 * i);
+        d->Q(i) = t;
+    }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
-void glue(helper_pmaddwd, SUFFIX)(CPUX86State *env, Reg *d, Reg *s)
+void glue(helper_pmaddwd, SUFFIX)(Reg *d, Reg *a, Reg *b, uint32_t desc)
 {
-    int i;
+    const intptr_t oprsz = simd_oprsz(desc);
+    const intptr_t maxsz = simd_maxsz(desc);
 
-    for (i = 0; i < (2 << SHIFT); i++) {
-        d->L(i) = (int16_t)s->W(2 * i) * (int16_t)d->W(2 * i) +
-            (int16_t)s->W(2 * i + 1) * (int16_t)d->W(2 * i + 1);
+    for (intptr_t i = 0; i * sizeof(uint32_t) < oprsz; ++i) {
+        const int32_t t0 = (int32_t)a->W(2 * i + 0) * (int32_t)b->W(2 * i + 0);
+        const int32_t t1 = (int32_t)a->W(2 * i + 1) * (int32_t)b->W(2 * i + 1);
+        d->L(i) = t0 + t1;
     }
+    glue(clear_high, SUFFIX)(d, oprsz, maxsz);
 }
 
 #if SHIFT == 0

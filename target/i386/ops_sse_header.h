@@ -71,8 +71,8 @@ DEF_HELPER_3(glue(pavgusb, SUFFIX), void, env, Reg, Reg)
 #endif
 DEF_HELPER_4(glue(pavgw, SUFFIX), void, Reg, Reg, Reg, i32)
 
-DEF_HELPER_3(glue(pmuludq, SUFFIX), void, env, Reg, Reg)
-DEF_HELPER_3(glue(pmaddwd, SUFFIX), void, env, Reg, Reg)
+DEF_HELPER_4(glue(pmuludq, SUFFIX), void, Reg, Reg, Reg, i32)
+DEF_HELPER_4(glue(pmaddwd, SUFFIX), void, Reg, Reg, Reg, i32)
 
 DEF_HELPER_3(glue(psadbw, SUFFIX), void, env, Reg, Reg)
 DEF_HELPER_4(glue(maskmov, SUFFIX), void, env, Reg, Reg, tl)
