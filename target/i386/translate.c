@@ -4441,6 +4441,36 @@ static void gen_sse(CPUX86State *env, DisasContext *s, int b)
     }
 }
 
+#define gen_gvec_s1_ool(ret, aofs, oprsz, maxsz, data, helper)  \
+    do {                                                        \
+        const TCGv_ptr a0 = tcg_temp_new_ptr();                 \
+        const TCGv_i32 desc =                                   \
+              tcg_const_i32(simd_desc(oprsz, maxsz, 0));        \
+                                                                \
+        tcg_gen_addi_ptr(a0, cpu_env, aofs);                    \
+        gen_helper_ ## helper(ret, a0, desc);                   \
+                                                                \
+        tcg_temp_free_ptr(a0);                                  \
+        tcg_temp_free_i32(desc);                                \
+    } while (0)
+
+/*
+ * We pass the immediate value via simd_data. The width is limited
+ * to SIMD_DATA_BITS, but we only use up to 8-bit immediates.
+ */
+#define gen_gvec_sd1_ool(ret, aofs, oprsz, maxsz, helper)       \
+    gen_gvec_s1_ool(ret, aofs, oprsz, maxsz, 0, helper)
+#define gen_gvec_sq1_ool(ret, aofs, oprsz, maxsz, helper)       \
+    gen_gvec_s1_ool(ret, aofs, oprsz, maxsz, 0, helper)
+#define gen_gvec_2_ool(aofs, bofs, oprsz, maxsz, helper)                \
+    tcg_gen_gvec_2_ool(aofs, bofs, oprsz, maxsz, 0, gen_helper_ ## helper)
+#define gen_gvec_2i_ool(aofs, bofs, c, oprsz, maxsz, helper)            \
+    tcg_gen_gvec_2_ool(aofs, bofs, oprsz, maxsz, c, gen_helper_ ## helper)
+#define gen_gvec_3_ool(aofs, bofs, cofs, oprsz, maxsz, helper)          \
+    tcg_gen_gvec_3_ool(aofs, bofs, cofs, oprsz, maxsz, 0, gen_helper_ ## helper)
+#define gen_gvec_3i_ool(aofs, bofs, cofs, c, oprsz, maxsz, helper)      \
+    tcg_gen_gvec_3_ool(aofs, bofs, cofs, oprsz, maxsz, c, gen_helper_ ## helper)
+
 #define gen_gvec_mov(dofs, aofs, oprsz, maxsz, vece)    \
     tcg_gen_gvec_mov(vece, dofs, aofs, oprsz, maxsz)
 
