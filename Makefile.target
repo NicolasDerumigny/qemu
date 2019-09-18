@@ -155,7 +155,6 @@ obj-y += hw/sparc64/
 else
 obj-y += hw/$(TARGET_BASE_ARCH)/
 endif
-
 GENERATED_FILES += hmp-commands.h hmp-commands-info.h
 
 endif # CONFIG_SOFTMMU
@@ -229,9 +228,6 @@ tcg-plugin-cpp.so: tcg-plugin-cpp.o $(CPP_PLUGIN_OBJS)
 endif # CONFIG_TCG_PLUGIN_CPP
 
 endif # CONFIG_TCG_PLUGIN
-
-# Workaround for http://gcc.gnu.org/PR55489, see configure.
-%/translate.o: QEMU_CFLAGS += $(TRANSLATE_OPT_CFLAGS)
 
 dummy := $(call unnest-vars,,obj-y)
 all-obj-y := $(obj-y)
