@@ -61,17 +61,17 @@ Support for invalid topologies will be removed, the user must ensure
 topologies described with -smp include all possible cpus, i.e.
   @math{@var{sockets} * @var{cores} * @var{threads} = @var{maxcpus}}.
 
+@subsection -realtime (since 4.1)
+
+The @code{-realtime mlock=on|off} argument has been replaced by the
+@code{-overcommit mem-lock=on|off} argument.
+
 @subsection QEMU_AUDIO_ environment variables and -audio-help (since 4.0)
 
 The ``-audiodev'' argument is now the preferred way to specify audio
 backend settings instead of environment variables.  To ease migration to
 the new format, the ``-audiodev-help'' option can be used to convert
 the current values of the environment variables to ``-audiodev'' options.
-
-@subsection -realtime (since 4.1)
-
-The @code{-realtime mlock=on|off} argument has been replaced by the
-@code{-overcommit mem-lock=on|off} argument.
 
 @section QEMU Machine Protocol (QMP) commands
 
