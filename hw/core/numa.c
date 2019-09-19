@@ -91,11 +91,11 @@ static void parse_numa_node(MachineState *ms, NumaNodeOptions *node,
     }
     for (cpus = node->cpus; cpus; cpus = cpus->next) {
         CpuInstanceProperties props;
-        if (cpus->value >= max_cpus) {
+        if (cpus->value >= ms->smp.max_cpus) {
             error_setg(errp,
                        "CPU index (%" PRIu16 ")"
                        " should be smaller than maxcpus (%d)",
-                       cpus->value, max_cpus);
+                       cpus->value, ms->smp.max_cpus);
             return;
         }
         props = mc->cpu_index_to_instance_props(ms, cpus->value);

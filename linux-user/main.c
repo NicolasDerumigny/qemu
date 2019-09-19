@@ -40,7 +40,7 @@
 #include "tcg-plugin.h"
 #include "qemu/timer.h"
 #include "qemu/envlist.h"
-#include "qemu/quest-random.h"
+#include "qemu/guest-random.h"
 #include "elf.h"
 #include "trace/control.h"
 #include "target_elf.h"

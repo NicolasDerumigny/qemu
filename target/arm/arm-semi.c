@@ -294,15 +294,7 @@ target_ulong do_arm_semihosting(CPUARMState *env)
             return (uint32_t)-1;
         }
         if (strcmp(s, ":tt") == 0) {
-            int result_fileno;
-
-             if (arg1 < 4)
-                 result_fileno = STDIN_FILENO;
-             else if (arg1 == 4)
-                 result_fileno = STDOUT_FILENO;
-             else
-                 result_fileno = STDERR_FILENO; /* newlib/libgloss uses mode "a"
-                                                 * (#8) to represent stderr.  */
+            int result_fileno = arg1 < 4 ? STDIN_FILENO : STDOUT_FILENO;
             unlock_user(s, arg0, 0);
             return result_fileno;
         }
@@ -451,13 +443,7 @@ target_ulong do_arm_semihosting(CPUARMState *env)
             return ret;
         }
     case TARGET_SYS_CLOCK:
-        /* Number of centiseconds since execution started.  */
-        if (clock_ifetch) {
-            assert(count_ifetch);
-            return ENV_GET_CPU(env)->ifetch_counter / (clock_ifetch / 100);
-        } else {
-            return clock() / (CLOCKS_PER_SEC / 100);
-        }
+        return clock() / (CLOCKS_PER_SEC / 100);
     case TARGET_SYS_TIME:
         return set_swi_errno(ts, time(NULL));
     case TARGET_SYS_SYSTEM:
