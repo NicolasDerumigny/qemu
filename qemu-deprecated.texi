@@ -17,7 +17,6 @@ they were first deprecated in the 2.10.0 release.
 What follows is a list of all features currently marked as
 deprecated.
 
-
 @section System emulator command line arguments
 
 @subsection -machine enforce-config-section=on|off (since 3.1)
@@ -61,8 +60,10 @@ Support for invalid topologies will be removed, the user must ensure
 topologies described with -smp include all possible cpus, i.e.
   @math{@var{sockets} * @var{cores} * @var{threads} = @var{maxcpus}}.
 
+@subsection -vnc acl (since 4.0.0)
 
-
+The @code{acl} option to the @code{-vnc} argument has been replaced
+by the @code{tls-authz} and @code{sasl-authz} options.
 
 @subsection QEMU_AUDIO_ environment variables and -audio-help (since 4.0)
 
