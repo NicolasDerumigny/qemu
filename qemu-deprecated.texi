@@ -17,6 +17,7 @@ they were first deprecated in the 2.10.0 release.
 What follows is a list of all features currently marked as
 deprecated.
 
+
 @section System emulator command line arguments
 
 @subsection -machine enforce-config-section=on|off (since 3.1)
@@ -28,7 +29,6 @@ The @option{enforce-config-section} parameter is replaced by the
 
 The ``-no-kvm'' argument is now a synonym for setting
 ``-machine accel=tcg''.
-
 
 @subsection -usbdevice (since 2.10.0)
 
@@ -61,10 +61,8 @@ Support for invalid topologies will be removed, the user must ensure
 topologies described with -smp include all possible cpus, i.e.
   @math{@var{sockets} * @var{cores} * @var{threads} = @var{maxcpus}}.
 
-@subsection -realtime (since 4.1)
 
-The @code{-realtime mlock=on|off} argument has been replaced by the
-@code{-overcommit mem-lock=on|off} argument.
+
 
 @subsection QEMU_AUDIO_ environment variables and -audio-help (since 4.0)
 
@@ -72,6 +70,11 @@ The ``-audiodev'' argument is now the preferred way to specify audio
 backend settings instead of environment variables.  To ease migration to
 the new format, the ``-audiodev-help'' option can be used to convert
 the current values of the environment variables to ``-audiodev'' options.
+
+@subsection -realtime (since 4.1)
+
+The @code{-realtime mlock=on|off} argument has been replaced by the
+@code{-overcommit mem-lock=on|off} argument.
 
 @subsection -virtfs_synth (since 4.1)
 
