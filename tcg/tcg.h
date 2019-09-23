@@ -1034,6 +1034,7 @@ int tcg_check_temp_count(void);
 int64_t tcg_cpu_exec_time(void);
 void tcg_dump_info(void);
 void tcg_dump_op_count(void);
+void tcg_dump_op(TCGContext *s, const TCGOp *const op, FILE *dst);
 
 #define TCG_CT_ALIAS  0x80
 #define TCG_CT_IALIAS 0x40
